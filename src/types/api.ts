@@ -20,6 +20,7 @@ export type GradoEstudios = 'PRIMARIA' | 'SECUNDARIA' | 'PREPARATORIA' | 'LICENC
 export type SituacionLaboral = 'ESTUDIANTE' | 'EMPLEADO' | 'AUTOEMPLEADO' | 'DESEMPLEADO' | 'OTRO';
 
 export interface RegisterDto {
+  password: string;
   apaterno: string;
   amaterno: string;
   nombres: string;

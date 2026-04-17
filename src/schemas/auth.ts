@@ -5,15 +5,26 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Password requerido'),
 });
 
-// Paso 1 — Datos personales
+// Paso 1 — Datos personales (base, sin confirmPassword)
 export const registerStep1Schema = z.object({
   apaterno: z.string().min(1, 'Apellido paterno requerido'),
   amaterno: z.string().min(1, 'Apellido materno requerido'),
   nombres: z.string().min(1, 'Nombres requeridos'),
   email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'Mínimo 8 caracteres').regex(/\d/, 'Debe contener al menos un número'),
   telefono: z.string().length(10, 'Debe tener 10 dígitos').regex(/^\d+$/, 'Solo números'),
   redesSociales: z.string().optional(),
 });
+
+// Schema del form de paso 1 (incluye confirmPassword para validación UI)
+export const registerStep1FormSchema = registerStep1Schema
+  .extend({
+    confirmPassword: z.string().min(1, 'Confirmá tu contraseña'),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: 'Las contraseñas no coinciden',
+    path: ['confirmPassword'],
+  });
 
 // Paso 2 — Dirección
 export const registerStep2Schema = z.object({
@@ -44,7 +55,7 @@ export const registerSchema = registerStep1Schema
   .merge(registerStep3Schema);
 
 export type LoginFormData = z.infer<typeof loginSchema>;
-export type RegisterStep1Data = z.infer<typeof registerStep1Schema>;
+export type RegisterStep1Data = z.infer<typeof registerStep1FormSchema>;
 export type RegisterStep2Data = z.infer<typeof registerStep2Schema>;
 export type RegisterStep3Data = z.infer<typeof registerStep3Schema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;

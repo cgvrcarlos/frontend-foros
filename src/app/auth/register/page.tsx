@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  registerStep1Schema,
+  registerStep1FormSchema,
   registerStep2Schema,
   registerStep3Schema,
   type RegisterStep1Data,
@@ -99,7 +99,7 @@ function Step1({
     handleSubmit,
     formState: { errors },
   } = useForm<RegisterStep1Data>({
-    resolver: zodResolver(registerStep1Schema),
+    resolver: zodResolver(registerStep1FormSchema),
     defaultValues,
   });
 
@@ -125,6 +125,26 @@ function Step1({
           autoComplete="email"
           className={inputClass}
           placeholder="juan@email.com"
+        />
+      </Field>
+
+      <Field label="Contraseña" error={errors.password?.message}>
+        <input
+          {...register('password')}
+          type="password"
+          autoComplete="new-password"
+          className={inputClass}
+          placeholder="Mínimo 8 caracteres con al menos un número"
+        />
+      </Field>
+
+      <Field label="Confirmar contraseña" error={errors.confirmPassword?.message}>
+        <input
+          {...register('confirmPassword')}
+          type="password"
+          autoComplete="new-password"
+          className={inputClass}
+          placeholder="Repetí tu contraseña"
         />
       </Field>
 
@@ -325,8 +345,8 @@ export default function RegisterPage() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleStep1 = (data: RegisterStep1Data) => {
-    setFormData((prev) => ({ ...prev, ...data }));
+  const handleStep1 = ({ confirmPassword: _cp, ...rest }: RegisterStep1Data) => {
+    setFormData((prev) => ({ ...prev, ...rest }));
     setStep(1);
   };
 
