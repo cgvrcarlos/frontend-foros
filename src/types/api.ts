@@ -1,5 +1,9 @@
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
+export type Genero = 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'NO_DICE';
+export type GradoEstudios = 'PRIMARIA' | 'SECUNDARIA' | 'PREPARATORIA' | 'LICENCIATURA' | 'POSGRADO' | 'OTRO';
+export type SituacionLaboral = 'ESTUDIANTE' | 'EMPLEADO' | 'AUTOEMPLEADO' | 'DESEMPLEADO' | 'OTRO';
+
 export interface User {
   id: string;
   email: string;
@@ -7,6 +11,17 @@ export interface User {
   apaterno: string;
   amaterno: string;
   role: 'USER' | 'ADMIN' | 'PONENTE';
+  telefono?: string | null;
+  redesSociales?: string | null;
+  calle?: string | null;
+  colonia?: string | null;
+  cp?: string | null;
+  municipio?: string | null;
+  genero?: Genero | null;
+  ocupacion?: string | null;
+  gradoEstudios?: GradoEstudios | null;
+  escuela?: string | null;
+  situacionLaboral?: SituacionLaboral | null;
 }
 
 export interface AuthResponse {
@@ -14,10 +29,6 @@ export interface AuthResponse {
   refreshToken?: string;
   user: User;
 }
-
-export type Genero = 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'NO_DICE';
-export type GradoEstudios = 'PRIMARIA' | 'SECUNDARIA' | 'PREPARATORIA' | 'LICENCIATURA' | 'POSGRADO' | 'OTRO';
-export type SituacionLaboral = 'ESTUDIANTE' | 'EMPLEADO' | 'AUTOEMPLEADO' | 'DESEMPLEADO' | 'OTRO';
 
 export interface RegisterDto {
   password: string;
@@ -46,6 +57,16 @@ export interface Ponencia {
   horaInicio: string;
   horaFin: string;
   orden: number;
+  ponente: { nombre: string };
+}
+
+export interface PonenciaAdmin {
+  id: string;
+  lugar: string;
+  horaInicio: string;
+  horaFin: string;
+  orden: number;
+  ponenteId: string;
   ponente: { nombre: string };
 }
 
@@ -90,7 +111,7 @@ export type TipoAsistencia = 'PRESENCIAL' | 'VIRTUAL';
 
 export interface AnswerItem {
   questionId: string;
-  respuesta: string | string[];
+  answer: string | string[];
 }
 
 export interface ConfirmAttendanceDto {

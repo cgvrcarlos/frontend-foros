@@ -14,7 +14,10 @@ import {
   type RegisterFormData,
 } from '@/schemas/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
-import Image from 'next/image';
+import { AuthLayout } from '@/components/ui/AuthLayout';
+import { FormField, formInputClass } from '@/components/ui/FormField';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { SecondaryButton } from '@/components/ui/SecondaryButton';
 
 // ─── Step indicators ─────────────────────────────────────────────────────────
 
@@ -28,11 +31,9 @@ function StepIndicator({ current }: { current: number }) {
           <div className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
-                i < current
-                  ? 'bg-blue-500 text-white'
-                  : i === current
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-slate-100 text-slate-400'
+                i <= current
+                  ? 'bg-teal-accent text-white'
+                  : 'bg-bg-light text-text-muted'
               }`}
             >
               {i < current ? (
@@ -45,14 +46,14 @@ function StepIndicator({ current }: { current: number }) {
             </div>
             <span
               className={`text-xs font-medium hidden sm:block ${
-                i === current ? 'text-slate-900' : 'text-slate-400'
+                i === current ? 'text-text-primary' : 'text-text-muted'
               }`}
             >
               {label}
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`flex-1 h-px mx-2 ${i < current ? 'bg-blue-300' : 'bg-slate-200'}`} />
+            <div className={`flex-1 h-px mx-2 ${i < current ? 'bg-teal-accent/40' : 'bg-border'}`} />
           )}
         </div>
       ))}
@@ -60,31 +61,11 @@ function StepIndicator({ current }: { current: number }) {
   );
 }
 
-// ─── Field helpers ────────────────────────────────────────────────────────────
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-    </div>
-  );
-}
-
-const inputClass =
-  'w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow';
+// ─── Shared input class for selects ──────────────────────────────────────────
 
 const selectClass =
-  'w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow';
+  'w-full px-3 py-2.5 rounded-lg border border-border text-text-primary bg-surface ' +
+  'focus:outline-none focus:ring-2 focus:ring-teal-accent focus:border-transparent transition';
 
 // ─── Step 1 ───────────────────────────────────────────────────────────────────
 
@@ -107,73 +88,70 @@ function Step1({
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Apellido paterno" error={errors.apaterno?.message}>
-          <input {...register('apaterno')} className={inputClass} placeholder="García" />
-        </Field>
-        <Field label="Apellido materno" error={errors.amaterno?.message}>
-          <input {...register('amaterno')} className={inputClass} placeholder="López" />
-        </Field>
+        <FormField label="Apellido paterno" error={errors.apaterno?.message}>
+          <input {...register('apaterno')} className={formInputClass} placeholder="García" />
+        </FormField>
+        <FormField label="Apellido materno" error={errors.amaterno?.message}>
+          <input {...register('amaterno')} className={formInputClass} placeholder="López" />
+        </FormField>
       </div>
 
-      <Field label="Nombres" error={errors.nombres?.message}>
-        <input {...register('nombres')} className={inputClass} placeholder="Juan Carlos" />
-      </Field>
+      <FormField label="Nombres" error={errors.nombres?.message}>
+        <input {...register('nombres')} className={formInputClass} placeholder="Juan Carlos" />
+      </FormField>
 
-      <Field label="Email" error={errors.email?.message}>
+      <FormField label="Email" error={errors.email?.message}>
         <input
           {...register('email')}
           type="email"
           autoComplete="email"
-          className={inputClass}
+          className={formInputClass}
           placeholder="juan@email.com"
         />
-      </Field>
+      </FormField>
 
-      <Field label="Contraseña" error={errors.password?.message}>
+      <FormField label="Contraseña" error={errors.password?.message}>
         <input
           {...register('password')}
           type="password"
           autoComplete="new-password"
-          className={inputClass}
+          className={formInputClass}
           placeholder="Mínimo 8 caracteres con al menos un número"
         />
-      </Field>
+      </FormField>
 
-      <Field label="Confirmar contraseña" error={errors.confirmPassword?.message}>
+      <FormField label="Confirmar contraseña" error={errors.confirmPassword?.message}>
         <input
           {...register('confirmPassword')}
           type="password"
           autoComplete="new-password"
-          className={inputClass}
-          placeholder="Repetí tu contraseña"
+          className={formInputClass}
+          placeholder="Repita su contraseña"
         />
-      </Field>
+      </FormField>
 
-      <Field label="Teléfono (10 dígitos)" error={errors.telefono?.message}>
+      <FormField label="Teléfono (10 dígitos)" error={errors.telefono?.message}>
         <input
           {...register('telefono')}
           type="tel"
           inputMode="numeric"
           maxLength={10}
-          className={inputClass}
+          className={formInputClass}
           placeholder="5512345678"
         />
-      </Field>
+      </FormField>
 
-      <Field label="Redes sociales (opcional)" error={errors.redesSociales?.message}>
+      <FormField label="Redes sociales (opcional)" error={errors.redesSociales?.message}>
         <input
           {...register('redesSociales')}
-          className={inputClass}
+          className={formInputClass}
           placeholder="@usuario o perfil de Facebook"
         />
-      </Field>
+      </FormField>
 
-      <button
-        type="submit"
-        className="w-full py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors mt-2"
-      >
+      <PrimaryButton type="submit" className="w-full mt-2">
         Continuar
-      </button>
+      </PrimaryButton>
     </form>
   );
 }
@@ -200,43 +178,36 @@ function Step2({
 
   return (
     <form onSubmit={handleSubmit(onNext)} className="space-y-4">
-      <Field label="Calle y número" error={errors.calle?.message}>
-        <input {...register('calle')} className={inputClass} placeholder="Av. Principal 123" />
-      </Field>
+      <FormField label="Calle y número" error={errors.calle?.message}>
+        <input {...register('calle')} className={formInputClass} placeholder="Av. Principal 123" />
+      </FormField>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label="Colonia" error={errors.colonia?.message}>
-          <input {...register('colonia')} className={inputClass} placeholder="Centro" />
-        </Field>
-        <Field label="Código postal" error={errors.cp?.message}>
+        <FormField label="Colonia" error={errors.colonia?.message}>
+          <input {...register('colonia')} className={formInputClass} placeholder="Centro" />
+        </FormField>
+        <FormField label="Código postal" error={errors.cp?.message}>
           <input
             {...register('cp')}
             inputMode="numeric"
             maxLength={5}
-            className={inputClass}
+            className={formInputClass}
             placeholder="12345"
           />
-        </Field>
+        </FormField>
       </div>
 
-      <Field label="Municipio" error={errors.municipio?.message}>
-        <input {...register('municipio')} className={inputClass} placeholder="Ciudad de México" />
-      </Field>
+      <FormField label="Municipio" error={errors.municipio?.message}>
+        <input {...register('municipio')} className={formInputClass} placeholder="Ciudad de México" />
+      </FormField>
 
       <div className="flex gap-3 mt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          className="flex-1 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
-        >
+        <SecondaryButton type="button" onClick={onBack} className="flex-1">
           Atrás
-        </button>
-        <button
-          type="submit"
-          className="flex-1 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 transition-colors"
-        >
+        </SecondaryButton>
+        <PrimaryButton type="submit" className="flex-1">
           Continuar
-        </button>
+        </PrimaryButton>
       </div>
     </form>
   );
@@ -268,23 +239,23 @@ function Step3({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
-      <Field label="Género" error={errors.genero?.message}>
+      <FormField label="Género" error={errors.genero?.message}>
         <select {...register('genero')} className={selectClass} defaultValue="">
-          <option value="" disabled>Seleccioná una opción</option>
+          <option value="" disabled>Seleccione una opción</option>
           <option value="MASCULINO">Masculino</option>
           <option value="FEMENINO">Femenino</option>
           <option value="OTRO">Otro</option>
           <option value="NO_DICE">Prefiero no decir</option>
         </select>
-      </Field>
+      </FormField>
 
-      <Field label="Ocupación" error={errors.ocupacion?.message}>
-        <input {...register('ocupacion')} className={inputClass} placeholder="Ej: Docente, Comerciante..." />
-      </Field>
+      <FormField label="Ocupación" error={errors.ocupacion?.message}>
+        <input {...register('ocupacion')} className={formInputClass} placeholder="Ej: Docente, Comerciante..." />
+      </FormField>
 
-      <Field label="Grado de estudios" error={errors.gradoEstudios?.message}>
+      <FormField label="Grado de estudios" error={errors.gradoEstudios?.message}>
         <select {...register('gradoEstudios')} className={selectClass} defaultValue="">
-          <option value="" disabled>Seleccioná una opción</option>
+          <option value="" disabled>Seleccione una opción</option>
           <option value="PRIMARIA">Primaria</option>
           <option value="SECUNDARIA">Secundaria</option>
           <option value="PREPARATORIA">Preparatoria</option>
@@ -292,45 +263,36 @@ function Step3({
           <option value="POSGRADO">Posgrado</option>
           <option value="OTRO">Otro</option>
         </select>
-      </Field>
+      </FormField>
 
-      <Field label="Escuela (opcional)" error={errors.escuela?.message}>
-        <input {...register('escuela')} className={inputClass} placeholder="Nombre de tu institución" />
-      </Field>
+      <FormField label="Escuela (opcional)" error={errors.escuela?.message}>
+        <input {...register('escuela')} className={formInputClass} placeholder="Nombre de su institución" />
+      </FormField>
 
-      <Field label="Situación laboral" error={errors.situacionLaboral?.message}>
+      <FormField label="Situación laboral" error={errors.situacionLaboral?.message}>
         <select {...register('situacionLaboral')} className={selectClass} defaultValue="">
-          <option value="" disabled>Seleccioná una opción</option>
+          <option value="" disabled>Seleccione una opción</option>
           <option value="ESTUDIANTE">Estudiante</option>
           <option value="EMPLEADO">Empleado</option>
           <option value="AUTOEMPLEADO">Autoempleado</option>
           <option value="DESEMPLEADO">Desempleado</option>
           <option value="OTRO">Otro</option>
         </select>
-      </Field>
+      </FormField>
 
       {error && (
-        <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm">
+        <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-300 text-red-600 text-sm">
           {error}
         </div>
       )}
 
       <div className="flex gap-3 mt-2">
-        <button
-          type="button"
-          onClick={onBack}
-          disabled={isSubmitting}
-          className="flex-1 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 disabled:opacity-60 transition-colors"
-        >
+        <SecondaryButton type="button" onClick={onBack} disabled={isSubmitting} className="flex-1">
           Atrás
-        </button>
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-1 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
-        >
+        </SecondaryButton>
+        <PrimaryButton type="submit" size="lg" disabled={isSubmitting} className="flex-1">
           {isSubmitting ? 'Registrando...' : 'Registrarse'}
-        </button>
+        </PrimaryButton>
       </div>
     </form>
   );
@@ -347,12 +309,12 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleStep1 = ({ confirmPassword: _cp, ...rest }: RegisterStep1Data) => {
-    setFormData((prev) => ({ ...prev, ...rest }));
+    setFormData(prev => ({ ...prev, ...rest }));
     setStep(1);
   };
 
   const handleStep2 = (data: RegisterStep2Data) => {
-    setFormData((prev) => ({ ...prev, ...data }));
+    setFormData(prev => ({ ...prev, ...data }));
     setStep(2);
   };
 
@@ -366,75 +328,51 @@ export default function RegisterPage() {
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string | string[] } } };
       const msg = axiosError.response?.data?.message;
-      setError(Array.isArray(msg) ? msg.join('. ') : (msg || 'Error al registrar. Intentá nuevamente.'));
+      setError(
+        Array.isArray(msg) ? msg.join('. ') : msg || 'Error al registrar. Intente nuevamente.'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const footer = (
+    <>
+      ¿Ya tiene cuenta?{' '}
+      <Link href="/auth/login" className="text-teal-soft font-medium hover:underline">
+        Inicie sesión
+      </Link>
+    </>
+  );
+
   return (
-    <div className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
-      {/* Decorative papiros */}
-      <div className="pointer-events-none absolute inset-0 select-none">
-        <Image
-          src="/papiro2.svg"
-          alt=""
-          width={320}
-          height={320}
-          className="absolute -left-16 top-1/4 opacity-[0.12] rotate-12"
-        />
-        <Image
-          src="/papiro2.svg"
-          alt=""
-          width={280}
-          height={280}
-          className="absolute -right-12 bottom-1/4 opacity-[0.10] -rotate-12"
-        />
-        <Image
-          src="/papiro3.svg"
-          alt=""
-          width={200}
-          height={200}
-          className="absolute left-1/4 -bottom-8 opacity-[0.08]"
-        />
-      </div>
-      <div className="w-full max-w-lg">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">Crear cuenta</h1>
-            <p className="text-sm text-slate-500">Completá los datos para registrarte como ciudadano.</p>
-          </div>
+    <AuthLayout
+      title="Crear cuenta"
+      subtitle="Complete el formulario para registrarse."
+      size="lg"
+      footer={footer}
+    >
+      <StepIndicator current={step} />
 
-          <StepIndicator current={step} />
-
-          {step === 0 && (
-            <Step1 onNext={handleStep1} defaultValues={formData as Partial<RegisterStep1Data>} />
-          )}
-          {step === 1 && (
-            <Step2
-              onNext={handleStep2}
-              onBack={() => setStep(0)}
-              defaultValues={formData as Partial<RegisterStep2Data>}
-            />
-          )}
-          {step === 2 && (
-            <Step3
-              onSubmit={handleStep3}
-              onBack={() => setStep(1)}
-              isSubmitting={isSubmitting}
-              error={error}
-              defaultValues={formData as Partial<RegisterStep3Data>}
-            />
-          )}
-
-          <p className="mt-6 text-center text-sm text-slate-500">
-            ¿Ya tenés cuenta?{' '}
-            <Link href="/auth/login" className="text-blue-500 font-medium hover:underline">
-              Ingresá acá
-            </Link>
-          </p>
-        </div>
-      </div>
-    </div>
+      {step === 0 && (
+        <Step1 onNext={handleStep1} defaultValues={formData as Partial<RegisterStep1Data>} />
+      )}
+      {step === 1 && (
+        <Step2
+          onNext={handleStep2}
+          onBack={() => setStep(0)}
+          defaultValues={formData as Partial<RegisterStep2Data>}
+        />
+      )}
+      {step === 2 && (
+        <Step3
+          onSubmit={handleStep3}
+          onBack={() => setStep(1)}
+          isSubmitting={isSubmitting}
+          error={error}
+          defaultValues={formData as Partial<RegisterStep3Data>}
+        />
+      )}
+    </AuthLayout>
   );
 }

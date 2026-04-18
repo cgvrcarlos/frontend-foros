@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { PageHero } from '@/components/ui/PageHero';
+import { SectionCard } from '@/components/ui/SectionCard';
 import api from '@/lib/api';
 
 interface MiPonencia {
@@ -29,26 +30,26 @@ function PonenciaCard({ ponencia }: { ponencia: MiPonencia }) {
   });
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+    <SectionCard>
       <div className="mb-3">
-        <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">Evento</p>
-        <h3 className="font-semibold text-slate-900">{ponencia.evento.titulo}</h3>
-        <p className="text-sm text-slate-500 capitalize mt-0.5">{fechaFormateada}</p>
+        <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Evento</p>
+        <h3 className="font-semibold text-text-primary">{ponencia.evento.titulo}</h3>
+        <p className="text-sm text-text-muted capitalize mt-0.5">{fechaFormateada}</p>
       </div>
 
-      <div className="border-t border-slate-100 pt-4 mt-4">
-        <p className="text-xs text-slate-400 uppercase tracking-wide mb-1">Ponencia</p>
-        <h4 className="font-medium text-slate-800 mb-1">{ponencia.lugar}</h4>
-        <p className="text-xs text-slate-400 font-mono">
+      <div className="border-t border-border pt-4 mt-4">
+        <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Ponencia</p>
+        <h4 className="font-medium text-text-primary mb-1">{ponencia.lugar}</h4>
+        <p className="text-xs text-text-muted font-mono">
           {ponencia.horaInicio} — {ponencia.horaFin}
         </p>
       </div>
 
       {ponencia.evento.survey?.id && (
-        <div className="mt-4 pt-4 border-t border-slate-100">
+        <div className="mt-4 pt-4 border-t border-border">
           <Link
             href={`/surveys/${ponencia.evento.survey.id}/respuestas`}
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-500 hover:text-blue-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-teal-accent hover:opacity-80 transition-opacity"
           >
             Ver respuestas de encuesta
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,7 +58,7 @@ function PonenciaCard({ ponencia }: { ponencia: MiPonencia }) {
           </Link>
         </div>
       )}
-    </div>
+    </SectionCard>
   );
 }
 
@@ -85,9 +86,8 @@ export default function PonentePanel() {
 
   if (authLoading) {
     return (
-      <div className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
-        <div className="text-white/60">Verificando permisos...</div>
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-teal-dark">
+        <p className="text-white/60">Verificando permisos...</p>
       </div>
     );
   }
@@ -95,23 +95,13 @@ export default function PonentePanel() {
   if (!user || user.role !== 'PONENTE') return null;
 
   return (
-    <div className="relative overflow-hidden min-h-[calc(100vh-4rem)]"
-      style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
+    <>
+      <PageHero
+        title="Panel del Ponente"
+        subtitle={`Bienvenido, ${user.nombres}. Estas son tus ponencias asignadas.`}
+      />
 
-      <div className="pointer-events-none absolute inset-0 select-none">
-        <Image src="/papiro2.svg" alt="" width={320} height={320} className="absolute -left-16 top-1/4 opacity-[0.12] rotate-12" />
-        <Image src="/papiro2.svg" alt="" width={280} height={280} className="absolute -right-12 bottom-1/4 opacity-[0.10] -rotate-12" />
-        <Image src="/papiro3.svg" alt="" width={200} height={200} className="absolute left-1/4 -bottom-8 opacity-[0.08]" />
-      </div>
-
-      <div className="relative z-10 max-w-4xl mx-auto px-4 py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">Mi panel</h1>
-          <p className="text-white/70">
-            Hola, {user.nombres}. Estas son tus ponencias asignadas.
-          </p>
-        </div>
-
+      <div className="max-w-4xl mx-auto px-4 py-10">
         {error && (
           <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm mb-6">
             {error}
@@ -121,7 +111,7 @@ export default function PonentePanel() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-slate-200 p-6 animate-pulse">
+              <div key={i} className="bg-surface rounded-xl border border-border p-6 animate-pulse">
                 <div className="h-3 bg-slate-200 rounded w-1/3 mb-3" />
                 <div className="h-5 bg-slate-200 rounded w-4/5 mb-2" />
                 <div className="h-3 bg-slate-200 rounded w-2/5" />
@@ -129,12 +119,14 @@ export default function PonentePanel() {
             ))}
           </div>
         ) : ponencias.length === 0 ? (
-          <div className="text-center py-20 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
-            <p className="text-white/70 font-medium">No tenés ponencias asignadas.</p>
-            <p className="text-white/50 text-sm mt-1">
-              El administrador te asignará eventos próximamente.
-            </p>
-          </div>
+          <SectionCard>
+            <div className="text-center py-10">
+              <p className="text-text-primary font-medium">No tiene ponencias asignadas.</p>
+              <p className="text-text-muted text-sm mt-1">
+                El administrador le asignará eventos próximamente.
+              </p>
+            </div>
+          </SectionCard>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {ponencias.map(p => (
@@ -143,6 +135,6 @@ export default function PonentePanel() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

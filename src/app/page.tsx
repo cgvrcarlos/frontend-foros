@@ -117,7 +117,7 @@ export default function Home() {
           </h1>
 
           <p className="text-lg md:text-xl text-white/70 leading-relaxed mb-10 max-w-xl mx-auto">
-            Registrate, asiste a eventos y has escuchar tu voz a través de encuestas y propuestas comunitarias.
+            Regístrese, asista a eventos y haga escuchar su voz a través de encuestas y propuestas comunitarias.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -196,7 +196,7 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 className="font-semibold text-slate-900 text-lg mb-2">1. Registrate</h3>
+              <h3 className="font-semibold text-slate-900 text-lg mb-2">1. Regístrese</h3>
               <p className="text-slate-500 text-sm leading-relaxed">
                 Creá tu cuenta en minutos completando tus datos como ciudadano.
               </p>
@@ -253,7 +253,7 @@ export default function Home() {
         <div className="relative z-10 max-w-xl mx-auto">
           <h2 className="text-4xl font-bold text-white mb-4">Tu voz importa</h2>
           <p className="text-white/70 text-lg mb-10 leading-relaxed">
-            Registrate gratis y comenzá a participar en los eventos ciudadanos de tu comunidad.
+            Regístrese gratuitamente y comience a participar en los eventos ciudadanos de su comunidad.
           </p>
           <Link
             href="/auth/register"

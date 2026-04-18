@@ -1,8 +1,54 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { PageHero } from '@/components/ui/PageHero';
+import { SectionCard } from '@/components/ui/SectionCard';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
+import { SecondaryButton } from '@/components/ui/SecondaryButton';
+
+function ProfileField({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1 py-2 border-b border-border last:border-0">
+      <dt className="text-sm text-text-muted">{label}</dt>
+      <dd className="text-text-primary font-medium">{value?.trim() ? value : '—'}</dd>
+    </div>
+  );
+}
+
+function formatGenero(g?: string | null) {
+  const map: Record<string, string> = {
+    MASCULINO: 'Masculino',
+    FEMENINO: 'Femenino',
+    OTRO: 'Otro',
+    NO_DICE: 'Prefiero no decir',
+  };
+  return g ? (map[g] ?? g) : undefined;
+}
+
+function formatGradoEstudios(g?: string | null) {
+  const map: Record<string, string> = {
+    PRIMARIA: 'Primaria',
+    SECUNDARIA: 'Secundaria',
+    PREPARATORIA: 'Preparatoria',
+    LICENCIATURA: 'Licenciatura',
+    POSGRADO: 'Posgrado',
+    OTRO: 'Otro',
+  };
+  return g ? (map[g] ?? g) : undefined;
+}
+
+function formatSituacionLaboral(s?: string | null) {
+  const map: Record<string, string> = {
+    ESTUDIANTE: 'Estudiante',
+    EMPLEADO: 'Empleado',
+    AUTOEMPLEADO: 'Autoempleado',
+    DESEMPLEADO: 'Desempleado',
+    OTRO: 'Otro',
+  };
+  return s ? (map[s] ?? s) : undefined;
+}
 
 export default function ProfilePage() {
   const { user, logout, loading } = useAuth();
@@ -21,104 +67,57 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div
-        className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center"
-        style={{
-          background:
-            'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)',
-        }}
-      >
-        <div className="pointer-events-none absolute inset-0 select-none">
-          <Image src="/papiro2.svg" alt="" width={320} height={320} className="absolute -left-16 top-1/4 opacity-[0.12] rotate-12" />
-          <Image src="/papiro2.svg" alt="" width={280} height={280} className="absolute -right-12 bottom-1/4 opacity-[0.10] -rotate-12" />
-          <Image src="/papiro3.svg" alt="" width={200} height={200} className="absolute left-1/4 -bottom-8 opacity-[0.08]" />
-        </div>
-        <div className="relative z-10 text-white/60">Cargando...</div>
+      <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-teal-dark">
+        <p className="text-white/60">Cargando...</p>
       </div>
     );
   }
 
   if (!user) return null;
 
-  const isUser = 'nombres' in user;
-  const isAdmin = 'role' in user && !isUser;
+  const nombreCompleto = `${user.nombres} ${user.apaterno} ${user.amaterno}`.trim();
 
   return (
-    <div
-      className="relative overflow-hidden min-h-[calc(100vh-4rem)]"
-      style={{
-        background:
-          'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)',
-      }}
-    >
- 
-      <div className="pointer-events-none absolute inset-0 select-none">
-        <Image src="/papiro2.svg" alt="" width={320} height={320} className="absolute -left-16 top-1/4 opacity-[0.12] rotate-12" />
-        <Image src="/papiro2.svg" alt="" width={280} height={280} className="absolute -right-12 bottom-1/4 opacity-[0.10] -rotate-12" />
-        <Image src="/papiro3.svg" alt="" width={200} height={200} className="absolute left-1/4 -bottom-8 opacity-[0.08]" />
-      </div>
+    <>
+      <PageHero title="Mi Perfil" subtitle="Información registrada en tu cuenta" />
 
-      <div className="relative z-10 py-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold text-white mb-8">Mi Perfil</h1>
+      <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+        {/* Section 1 — Datos personales */}
+        <SectionCard title="Datos personales">
+          <dl>
+            <ProfileField label="Nombre completo" value={nombreCompleto} />
+            <ProfileField label="Email" value={user.email} />
+            <ProfileField label="Teléfono" value={user.telefono} />
+            <ProfileField label="Redes sociales" value={user.redesSociales} />
+          </dl>
+        </SectionCard>
 
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 p-6 mb-6">
-            <h2 className="text-sm font-semibold text-white/60 uppercase tracking-wide mb-4">
-              Información de cuenta
-            </h2>
-            <dl className="space-y-3">
-              <div className="flex justify-between">
-                <dt className="text-white/60">Email</dt>
-                <dd className="text-white font-medium">{user.email}</dd>
-              </div>
+        {/* Section 2 — Domicilio */}
+        <SectionCard title="Domicilio">
+          <dl>
+            <ProfileField label="Calle" value={user.calle} />
+            <ProfileField label="Colonia" value={user.colonia} />
+            <ProfileField label="Código postal" value={user.cp} />
+            <ProfileField label="Municipio" value={user.municipio} />
+          </dl>
+        </SectionCard>
 
-              {isUser && (
-                <>
-                  <div className="flex justify-between">
-                    <dt className="text-white/60">Nombre completo</dt>
-                    <dd className="text-white font-medium">
-                      {(user as any).apaterno} {(user as any).amaterno},{' '}
-                      {(user as any).nombres}
-                    </dd>
-                  </div>
+        {/* Section 3 — Datos demográficos */}
+        <SectionCard title="Datos demográficos">
+          <dl>
+            <ProfileField label="Género" value={formatGenero(user.genero)} />
+            <ProfileField label="Ocupación" value={user.ocupacion} />
+            <ProfileField label="Grado de estudios" value={formatGradoEstudios(user.gradoEstudios)} />
+            <ProfileField label="Escuela" value={user.escuela} />
+            <ProfileField label="Situación laboral" value={formatSituacionLaboral(user.situacionLaboral)} />
+          </dl>
+        </SectionCard>
 
-                  <div className="flex justify-between">
-                    <dt className="text-white/60">Teléfono</dt>
-                    <dd className="text-white">
-                      {(user as any).telefono}
-                    </dd>
-                  </div>
-
-                  <div className="flex justify-between">
-                    <dt className="text-white/60">Municipio</dt>
-                    <dd className="text-white">
-                      {(user as any).municipio}
-                    </dd>
-                  </div>
-                </>
-              )}
-
-              {isAdmin && (
-                <div className="flex justify-between">
-                  <dt className="text-white/60">Rol</dt>
-                  <dd>
-                    <span className="bg-blue-500/20 text-blue-300 text-xs font-semibold px-2 py-1 rounded-full">
-                      {(user as any).role}
-                    </span>
-                  </dd>
-                </div>
-              )}
-            </dl>
-          </div>
-
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2.5 rounded-lg transition-colors"
-          >
-            Cerrar sesión
-          </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <PrimaryButton disabled>Editar perfil</PrimaryButton>
+          <SecondaryButton onClick={handleLogout}>Cerrar sesión</SecondaryButton>
         </div>
       </div>
-    </div> 
+    </>
   );
 }

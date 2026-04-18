@@ -4,9 +4,9 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth/AuthProvider';
 import api from '@/lib/api';
-import type { Evento, Stats, PonenteAdmin, UserAdmin, PaginatedResponse, Survey, Pregunta, TipoPregunta, AttendanceResponse } from '@/types/api';
+import type { Evento, Stats, PonenteAdmin, UserAdmin, PaginatedResponse, Survey, Pregunta, TipoPregunta, AttendanceResponse, PonenciaAdmin } from '@/types/api';
 
-type Tab = 'estadisticas' | 'eventos' | 'encuestas' | 'asistencias' | 'usuarios' | 'ponentes';
+type Tab = 'estadisticas' | 'eventos' | 'encuestas' | 'asistencias' | 'usuarios' | 'ponentes' | 'ponencias';
 
 const NAV: { id: Tab; label: string }[] = [
   { id: 'estadisticas', label: 'Estadísticas' },
@@ -15,11 +15,12 @@ const NAV: { id: Tab; label: string }[] = [
   { id: 'asistencias', label: 'Asistencias' },
   { id: 'usuarios', label: 'Usuarios' },
   { id: 'ponentes', label: 'Ponentes' },
+  { id: 'ponencias', label: 'Ponencias' },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const inputCls = 'w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-teal-accent';
 
 // ─── Stats ───────────────────────────────────────────────────────────────────
 
@@ -142,7 +143,7 @@ function EventForm({ evento, onClose, onSave }: EventFormProps) {
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 text-sm">
               Cancelar
             </button>
-            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-60 text-sm">
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-orange-cta text-white font-medium hover:brightness-95 disabled:opacity-60 text-sm">
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
@@ -193,7 +194,7 @@ function EventosPanel() {
       )}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-slate-900">Eventos</h2>
-        <button onClick={() => setShowForm(true)} className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors">
+        <button onClick={() => setShowForm(true)} className="px-4 py-2 text-sm font-medium text-white bg-orange-cta hover:brightness-95 rounded-lg transition-colors">
           Nuevo evento
         </button>
       </div>
@@ -228,7 +229,7 @@ function EventosPanel() {
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-3">
                         <button onClick={() => setEditEvento(ev)} className="text-xs text-slate-500 hover:text-slate-700 font-medium">Editar</button>
-                        <button onClick={() => togglePublicado(ev)} className="text-xs text-blue-500 hover:text-blue-700 font-medium">
+                        <button onClick={() => togglePublicado(ev)} className="text-xs text-teal-accent hover:text-teal-accent/80 font-medium">
                           {ev.publicado ? 'Ocultar' : 'Publicar'}
                         </button>
                         <button onClick={() => eliminar(ev.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">Eliminar</button>
@@ -255,6 +256,111 @@ const TIPOS_PREGUNTA: { value: TipoPregunta; label: string }[] = [
   { value: 'ABIERTA_LARGO', label: 'Abierta larga' },
 ];
 
+interface EditPreguntaFormProps {
+  pregunta: Pregunta;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function EditPreguntaForm({ pregunta, onClose, onSave }: EditPreguntaFormProps) {
+  const [form, setForm] = useState({
+    tipo: pregunta.tipo,
+    texto: pregunta.texto,
+    opciones: pregunta.opciones.join('\n'),
+    seccion: pregunta.seccion,
+    esRequerida: pregunta.esRequerida,
+    escalaMin: String(pregunta.escalaMin ?? 1),
+    escalaMax: String(pregunta.escalaMax ?? 5),
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      const payload: Record<string, unknown> = {
+        tipo: form.tipo,
+        texto: form.texto,
+        seccion: form.seccion,
+        esRequerida: form.esRequerida,
+      };
+      if (form.tipo === 'OPCION_UNICA' || form.tipo === 'MULTIPLE') {
+        payload.opciones = form.opciones.split('\n').map(s => s.trim()).filter(Boolean);
+      }
+      if (form.tipo === 'ESCALA') {
+        payload.escalaMin = parseInt(form.escalaMin);
+        payload.escalaMax = parseInt(form.escalaMax);
+      }
+      await api.put(`/questions/${pregunta.id}`, payload);
+      onSave();
+      onClose();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'Error al actualizar.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4 overflow-y-auto">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6 w-full max-w-lg my-8">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Editar pregunta</h3>
+        {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Tipo</label>
+              <select value={form.tipo} onChange={e => setForm(p => ({ ...p, tipo: e.target.value as TipoPregunta }))} className={inputCls}>
+                {TIPOS_PREGUNTA.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Sección</label>
+              <select value={form.seccion} onChange={e => setForm(p => ({ ...p, seccion: e.target.value as 'ANALISIS' | 'PROPUESTAS' }))} className={inputCls}>
+                <option value="ANALISIS">Análisis</option>
+                <option value="PROPUESTAS">Propuestas</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Texto de la pregunta</label>
+            <input required value={form.texto} onChange={e => setForm(p => ({ ...p, texto: e.target.value }))} className={inputCls} />
+          </div>
+          {(form.tipo === 'OPCION_UNICA' || form.tipo === 'MULTIPLE') && (
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Opciones (una por línea)</label>
+              <textarea value={form.opciones} onChange={e => setForm(p => ({ ...p, opciones: e.target.value }))} rows={3} className={inputCls} placeholder={'Opción A\nOpción B\nOpción C'} />
+            </div>
+          )}
+          {form.tipo === 'ESCALA' && (
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">Mínimo</label>
+                <input type="number" value={form.escalaMin} onChange={e => setForm(p => ({ ...p, escalaMin: e.target.value }))} className={inputCls} />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-medium text-slate-600 mb-1">Máximo</label>
+                <input type="number" value={form.escalaMax} onChange={e => setForm(p => ({ ...p, escalaMax: e.target.value }))} className={inputCls} />
+              </div>
+            </div>
+          )}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={form.esRequerida} onChange={e => setForm(p => ({ ...p, esRequerida: e.target.checked }))} className="w-4 h-4 rounded text-teal-accent" />
+            <span className="text-xs text-slate-600">Pregunta requerida</span>
+          </label>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 text-sm">Cancelar</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-orange-cta text-white font-medium hover:brightness-95 disabled:opacity-60 text-sm">{saving ? 'Guardando...' : 'Guardar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function EncuestasPanel() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [eventoId, setEventoId] = useState('');
@@ -262,6 +368,7 @@ function EncuestasPanel() {
   const [loadingSurvey, setLoadingSurvey] = useState(false);
   const [creandoSurvey, setCreandoSurvey] = useState(false);
   const [tituloSurvey, setTituloSurvey] = useState('Encuesta del evento');
+  const [editPregunta, setEditPregunta] = useState<Pregunta | undefined>();
   const [showAddQ, setShowAddQ] = useState(false);
   const [newQ, setNewQ] = useState<{
     tipo: TipoPregunta; texto: string; opciones: string; seccion: 'ANALISIS' | 'PROPUESTAS'; esRequerida: boolean; escalaMin: string; escalaMax: string;
@@ -333,6 +440,7 @@ function EncuestasPanel() {
 
   return (
     <div>
+      {editPregunta && <EditPreguntaForm pregunta={editPregunta} onClose={() => setEditPregunta(undefined)} onSave={() => loadSurvey(eventoId)} />}
       <h2 className="text-lg font-semibold text-slate-900 mb-4">Gestión de encuestas</h2>
 
       <div className="mb-6">
@@ -366,7 +474,7 @@ function EncuestasPanel() {
             <button
               onClick={crearSurvey}
               disabled={creandoSurvey}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg disabled:opacity-60"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-cta hover:brightness-95 rounded-lg disabled:opacity-60"
             >
               {creandoSurvey ? 'Creando...' : 'Crear encuesta'}
             </button>
@@ -383,7 +491,7 @@ function EncuestasPanel() {
             </div>
             <button
               onClick={() => setShowAddQ(v => !v)}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg"
+              className="px-4 py-2 text-sm font-medium text-white bg-orange-cta hover:brightness-95 rounded-lg"
             >
               + Agregar pregunta
             </button>
@@ -430,12 +538,12 @@ function EncuestasPanel() {
                 </div>
               )}
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={newQ.esRequerida} onChange={e => setNewQ(p => ({ ...p, esRequerida: e.target.checked }))} className="w-4 h-4 rounded text-blue-500" />
+                <input type="checkbox" checked={newQ.esRequerida} onChange={e => setNewQ(p => ({ ...p, esRequerida: e.target.checked }))} className="w-4 h-4 rounded text-teal-accent" />
                 <span className="text-xs text-slate-600">Pregunta requerida</span>
               </label>
               <div className="flex gap-3 pt-1">
                 <button type="button" onClick={() => setShowAddQ(false)} className="flex-1 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-100">Cancelar</button>
-                <button type="button" onClick={agregarPregunta} disabled={savingQ || !newQ.texto} className="flex-1 py-2 rounded-lg bg-blue-500 text-white text-sm font-medium hover:bg-blue-600 disabled:opacity-60">
+                <button type="button" onClick={agregarPregunta} disabled={savingQ || !newQ.texto} className="flex-1 py-2 rounded-lg bg-orange-cta text-white text-sm font-medium hover:brightness-95 disabled:opacity-60">
                   {savingQ ? 'Guardando...' : 'Guardar pregunta'}
                 </button>
               </div>
@@ -462,6 +570,7 @@ function EncuestasPanel() {
                       <p className="text-xs text-slate-400 mt-0.5">Opciones: {q.opciones.join(', ')}</p>
                     )}
                   </div>
+                  <button onClick={() => setEditPregunta(q)} className="shrink-0 text-xs text-teal-accent hover:text-teal-accent/80 font-medium mr-2">Editar</button>
                   <button onClick={() => eliminarPregunta(q.id)} className="shrink-0 text-xs text-red-400 hover:text-red-600 font-medium">
                     Eliminar
                   </button>
@@ -627,7 +736,7 @@ function UsuariosPanel() {
           <h2 className="text-lg font-semibold text-slate-900">Usuarios registrados</h2>
           <p className="text-xs text-slate-400 mt-0.5">{total.toLocaleString()} total</p>
         </div>
-        <button onClick={exportarCSV} className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors">
+        <button onClick={exportarCSV} className="px-4 py-2 text-sm font-medium text-white bg-orange-cta hover:brightness-95 rounded-lg transition-colors">
           Exportar CSV
         </button>
       </div>
@@ -719,9 +828,60 @@ function PonenteForm({ onClose, onSave }: { onClose: () => void; onSave: () => v
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 text-sm">Cancelar</button>
-            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-60 text-sm">
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-orange-cta text-white font-medium hover:brightness-95 disabled:opacity-60 text-sm">
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+interface EditPonenteFormProps {
+  ponente: PonenteAdmin;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function EditPonenteForm({ ponente, onClose, onSave }: EditPonenteFormProps) {
+  const [form, setForm] = useState({ nombre: ponente.nombre, bio: ponente.bio ?? '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      await api.put(`/ponentes/${ponente.id}`, { nombre: form.nombre, bio: form.bio || undefined });
+      onSave();
+      onClose();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'Error al actualizar.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6 w-full max-w-md">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">Editar ponente</h3>
+        {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Nombre *</label>
+            <input required value={form.nombre} onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))} className={inputCls} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Biografía</label>
+            <textarea value={form.bio} onChange={e => setForm(p => ({ ...p, bio: e.target.value }))} rows={3} className={inputCls} />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 text-sm">Cancelar</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-orange-cta text-white font-medium hover:brightness-95 disabled:opacity-60 text-sm">{saving ? 'Guardando...' : 'Guardar'}</button>
           </div>
         </form>
       </div>
@@ -733,6 +893,7 @@ function PonentesPanelContent() {
   const [ponentes, setPonentes] = useState<PonenteAdmin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editPonente, setEditPonente] = useState<PonenteAdmin | undefined>();
 
   const fetchPonentes = useCallback(() => {
     api.get<PonenteAdmin[]>('/ponentes').then(res => setPonentes(res.data)).finally(() => setLoading(false));
@@ -751,9 +912,10 @@ function PonentesPanelContent() {
   return (
     <div>
       {showForm && <PonenteForm onClose={() => setShowForm(false)} onSave={fetchPonentes} />}
+      {editPonente && <EditPonenteForm ponente={editPonente} onClose={() => setEditPonente(undefined)} onSave={fetchPonentes} />}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-slate-900">Ponentes</h2>
-        <button onClick={() => setShowForm(true)} className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors">
+        <button onClick={() => setShowForm(true)} className="px-4 py-2 text-sm font-medium text-white bg-orange-cta hover:brightness-95 rounded-lg transition-colors">
           Nuevo ponente
         </button>
       </div>
@@ -778,7 +940,10 @@ function PonentesPanelContent() {
                     <td className="px-4 py-3 text-slate-500 hidden md:table-cell">{p.email}</td>
                     <td className="px-4 py-3 text-slate-400 text-xs hidden lg:table-cell">{p._count?.ponencias ?? 0}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => eliminar(p.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">Eliminar</button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button onClick={() => setEditPonente(p)} className="text-xs text-teal-accent hover:text-teal-accent/80 font-medium">Editar</button>
+                        <button onClick={() => eliminar(p.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">Eliminar</button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -787,6 +952,201 @@ function PonentesPanelContent() {
           </table>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Ponencia Form Modal ─────────────────────────────────────────────────────
+
+interface PonenciaFormProps {
+  eventoId: string;
+  ponencia?: PonenciaAdmin;
+  ponentes: PonenteAdmin[];
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function PonenciaForm({ eventoId, ponencia, ponentes, onClose, onSave }: PonenciaFormProps) {
+  const isEdit = !!ponencia;
+  const [form, setForm] = useState({
+    ponenteId: ponencia?.ponenteId ?? '',
+    lugar: ponencia?.lugar ?? '',
+    horaInicio: ponencia?.horaInicio ?? '',
+    horaFin: ponencia?.horaFin ?? '',
+    orden: ponencia?.orden ?? 0,
+  });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (form.horaFin <= form.horaInicio) {
+      setError('La hora de fin debe ser posterior a la hora de inicio.');
+      return;
+    }
+    setSaving(true);
+    setError('');
+    try {
+      if (isEdit) {
+        await api.put(`/ponencias/${ponencia!.id}`, form);
+      } else {
+        await api.post(`/eventos/${eventoId}/ponencias`, form);
+      }
+      onSave();
+      onClose();
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } };
+      setError(e.response?.data?.message || 'Error al guardar.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-6 w-full max-w-md">
+        <h3 className="text-lg font-semibold text-slate-900 mb-4">{isEdit ? 'Editar ponencia' : 'Nueva ponencia'}</h3>
+        {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Ponente *</label>
+            <select required value={form.ponenteId} onChange={e => setForm(p => ({ ...p, ponenteId: e.target.value }))} className={inputCls}>
+              <option value="">— Seleccionar ponente —</option>
+              {ponentes.map(p => <option key={p.id} value={p.id}>{p.nombre} ({p.email})</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Lugar *</label>
+            <input required value={form.lugar} onChange={e => setForm(p => ({ ...p, lugar: e.target.value }))} className={inputCls} placeholder="Ej: Sala A" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Hora inicio *</label>
+              <input required type="time" value={form.horaInicio} onChange={e => setForm(p => ({ ...p, horaInicio: e.target.value }))} className={inputCls} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Hora fin *</label>
+              <input required type="time" value={form.horaFin} onChange={e => setForm(p => ({ ...p, horaFin: e.target.value }))} className={inputCls} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Orden</label>
+            <input type="number" min={0} value={form.orden} onChange={e => setForm(p => ({ ...p, orden: parseInt(e.target.value) || 0 }))} className={inputCls} />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 text-sm">Cancelar</button>
+            <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-orange-cta text-white font-medium hover:brightness-95 disabled:opacity-60 text-sm">{saving ? 'Guardando...' : 'Guardar'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Ponencias Panel ──────────────────────────────────────────────────────────
+
+function PonenciasPanel() {
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const [eventoId, setEventoId] = useState('');
+  const [ponencias, setPonencias] = useState<PonenciaAdmin[]>([]);
+  const [ponentes, setPonentes] = useState<PonenteAdmin[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editPonencia, setEditPonencia] = useState<PonenciaAdmin | undefined>();
+
+  useEffect(() => {
+    api.get<Evento[]>('/eventos/all').then(res => setEventos(res.data));
+    api.get<PonenteAdmin[]>('/ponentes').then(res => setPonentes(res.data));
+  }, []);
+
+  const loadPonencias = useCallback(async (id: string) => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const { data } = await api.get<Evento>(`/eventos/${id}`);
+      setPonencias((data.ponencias as unknown as PonenciaAdmin[]) ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const handleSelect = (id: string) => {
+    setEventoId(id);
+    setPonencias([]);
+    if (id) loadPonencias(id);
+  };
+
+  const eliminarPonencia = async (id: string) => {
+    if (!confirm('¿Eliminar esta ponencia?')) return;
+    await api.delete(`/ponencias/${id}`);
+    loadPonencias(eventoId);
+  };
+
+  return (
+    <div>
+      {(showForm || editPonencia) && (
+        <PonenciaForm
+          eventoId={eventoId}
+          ponencia={editPonencia}
+          ponentes={ponentes}
+          onClose={() => { setShowForm(false); setEditPonencia(undefined); }}
+          onSave={() => loadPonencias(eventoId)}
+        />
+      )}
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-lg font-semibold text-slate-900">Ponencias por evento</h2>
+        {eventoId && (
+          <button onClick={() => setShowForm(true)} className="px-4 py-2 text-sm font-medium text-white bg-orange-cta hover:brightness-95 rounded-lg transition-colors">
+            Nueva ponencia
+          </button>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-slate-700 mb-1">Seleccionar evento</label>
+        <select value={eventoId} onChange={e => handleSelect(e.target.value)} className={inputCls}>
+          <option value="">— Seleccionar evento —</option>
+          {eventos.map(ev => <option key={ev.id} value={ev.id}>{ev.titulo}</option>)}
+        </select>
+      </div>
+
+      {eventoId && loading && <div className="animate-pulse h-40 bg-slate-200 rounded-xl" />}
+
+      {eventoId && !loading && ponencias.length === 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+          <p className="text-slate-400 text-sm">No hay ponencias para este evento. Agrega una.</p>
+        </div>
+      )}
+
+      {ponencias.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-200 bg-slate-50">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Ponente</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Lugar</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Horario</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Acciones</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {ponencias.sort((a, b) => a.orden - b.orden).map(p => (
+                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-4 py-3 font-medium text-slate-900">{p.ponente.nombre}</td>
+                  <td className="px-4 py-3 text-slate-500 hidden md:table-cell">{p.lugar}</td>
+                  <td className="px-4 py-3 text-slate-400 text-xs hidden md:table-cell">{p.horaInicio} – {p.horaFin}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-3">
+                      <button onClick={() => setEditPonencia(p)} className="text-xs text-teal-accent hover:text-teal-accent/80 font-medium">Editar</button>
+                      <button onClick={() => eliminarPonencia(p.id)} className="text-xs text-red-500 hover:text-red-700 font-medium">Eliminar</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -866,6 +1226,7 @@ export default function AdminPage() {
         {tab === 'asistencias' && <AsistenciasPanel />}
         {tab === 'usuarios' && <UsuariosPanel />}
         {tab === 'ponentes' && <PonentesPanelContent />}
+        {tab === 'ponencias' && <PonenciasPanel />}
       </div>
     </div>
   );

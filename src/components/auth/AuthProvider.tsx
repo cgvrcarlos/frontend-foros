@@ -32,24 +32,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     const { data } = await api.post<{ accessToken: string; refreshToken?: string; user: User }>(
-      '/auth/login',
-      { email, password }
+      '/auth/login', { email, password }
     );
     localStorage.setItem('accessToken', data.accessToken);
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
-    setUser(data.user);
-    return data.user;
+    const { data: fullUser } = await api.get<User>('/auth/me');
+    setUser(fullUser);
+    return fullUser;
   };
 
-  const register = async (formData: RegisterDto) => {
-    const { data } = await api.post<{ accessToken: string; user: User }>(
-      '/auth/register',
-      formData
-    );
+  const register = async (formData: RegisterDto): Promise<void> => {
+    const { data } = await api.post<{ accessToken: string; user: User }>('/auth/register', formData);
     localStorage.setItem('accessToken', data.accessToken);
-    setUser(data.user);
+    const { data: fullUser } = await api.get<User>('/auth/me');
+    setUser(fullUser);
   };
 
   const logout = () => {

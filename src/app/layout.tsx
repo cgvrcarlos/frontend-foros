@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Foro Ciudadano — Participación Ciudadana",
-  description: "Registrate, asistí a eventos y hacé escuchar tu voz a través de encuestas y propuestas comunitarias.",
+  description: "Regístrese, asista a eventos y haga escuchar su voz a través de encuestas y propuestas comunitarias.",
 };
 
 export default function RootLayout({

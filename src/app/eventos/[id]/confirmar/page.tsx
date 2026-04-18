@@ -1,48 +1,35 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { QRCodeCanvas } from 'qrcode.react';
 import api from '@/lib/api';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { SecondaryButton } from '@/components/ui/SecondaryButton';
+import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import type { Evento, Pregunta, TipoAsistencia, AttendanceResponse, AnswerItem } from '@/types/api';
 
 // ─── QR Display ───────────────────────────────────────────────────────────────
 
-function QRDisplay({ code }: { code: string }) {
+function QRDisplay({ code, eventoId }: { code: string; eventoId: string }) {
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = () => {
+    const canvas = canvasRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `qr-${eventoId}.png`;
+    a.click();
+  };
+
   return (
     <div className="flex flex-col items-center gap-6 py-4">
-      <div className="w-48 h-48 bg-white border-4 border-slate-900 rounded-xl flex items-center justify-center p-3">
-        <svg viewBox="0 0 100 100" className="w-full h-full" fill="currentColor">
-          <rect x="0" y="0" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="8" />
-          <rect x="10" y="10" width="10" height="10" />
-          <rect x="70" y="0" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="8" />
-          <rect x="80" y="10" width="10" height="10" />
-          <rect x="0" y="70" width="30" height="30" fill="none" stroke="currentColor" strokeWidth="8" />
-          <rect x="10" y="80" width="10" height="10" />
-          <rect x="40" y="10" width="5" height="5" />
-          <rect x="50" y="10" width="5" height="5" />
-          <rect x="40" y="20" width="10" height="5" />
-          <rect x="10" y="40" width="5" height="5" />
-          <rect x="20" y="50" width="5" height="10" />
-          <rect x="40" y="40" width="20" height="20" />
-          <rect x="65" y="40" width="5" height="5" />
-          <rect x="75" y="40" width="5" height="10" />
-          <rect x="85" y="45" width="5" height="5" />
-          <rect x="65" y="55" width="10" height="5" />
-          <rect x="40" y="65" width="5" height="10" />
-          <rect x="50" y="70" width="10" height="5" />
-          <rect x="65" y="65" width="5" height="5" />
-          <rect x="75" y="70" width="10" height="5" />
-          <rect x="85" y="65" width="5" height="10" />
-        </svg>
+      <div ref={canvasRef} className="bg-surface rounded-xl p-4 border-4 border-teal-dark">
+        <QRCodeCanvas value={code} size={200} level="M" includeMargin={false} />
       </div>
-
-      <div className="text-center">
-        <p className="text-xs text-slate-400 mb-1 uppercase tracking-wide">Código de acceso</p>
-        <p className="text-sm font-mono font-semibold text-slate-800 bg-slate-100 px-4 py-2 rounded-lg break-all">
-          {code}
-        </p>
-      </div>
+      <p className="font-mono text-sm text-text-muted bg-bg-light px-4 py-2 rounded-lg break-all">{code}</p>
+      <SecondaryButton size="sm" onClick={handleDownload}>Descargar QR</SecondaryButton>
     </div>
   );
 }
@@ -59,7 +46,7 @@ function PreguntaInput({
   onChange: (val: string | string[]) => void;
 }) {
   const baseInput =
-    'w-full px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow';
+    'w-full px-3 py-2.5 rounded-lg border border-border text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-teal-accent focus:border-transparent transition';
 
   switch (pregunta.tipo) {
     case 'OPCION_UNICA':
@@ -73,9 +60,9 @@ function PreguntaInput({
                 value={op}
                 checked={value === op}
                 onChange={() => onChange(op)}
-                className="w-4 h-4 text-blue-500 border-slate-300 focus:ring-blue-500"
+                className="w-4 h-4 text-teal-accent border-border focus:ring-teal-accent"
               />
-              <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">{op}</span>
+              <span className="text-sm text-text-primary group-hover:text-text-primary transition-colors">{op}</span>
             </label>
           ))}
         </div>
@@ -97,9 +84,9 @@ function PreguntaInput({
                     if (isChecked) onChange(selected.filter((v) => v !== op));
                     else onChange([...selected, op]);
                   }}
-                  className="w-4 h-4 rounded text-blue-500 border-slate-300 focus:ring-blue-500"
+                  className="w-4 h-4 rounded text-teal-accent border-border focus:ring-teal-accent"
                 />
-                <span className="text-sm text-slate-700 group-hover:text-slate-900 transition-colors">{op}</span>
+                <span className="text-sm text-text-primary group-hover:text-text-primary transition-colors">{op}</span>
               </label>
             );
           })}
@@ -115,9 +102,9 @@ function PreguntaInput({
             max={pregunta.escalaMax ?? 10}
             value={typeof value === 'string' ? value : ''}
             onChange={(e) => onChange(e.target.value)}
-            className="w-24 px-3 py-2.5 rounded-lg border border-slate-200 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-24 px-3 py-2.5 rounded-lg border border-border text-text-primary focus:outline-none focus:ring-2 focus:ring-teal-accent"
           />
-          <span className="text-sm text-slate-400">
+          <span className="text-sm text-text-muted">
             ({pregunta.escalaMin ?? 1} — {pregunta.escalaMax ?? 10})
           </span>
         </div>
@@ -167,7 +154,7 @@ function StepBar({ current }: { current: Step }) {
           <div className="flex items-center gap-2">
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
-                i <= idx ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-400'
+                i <= idx ? 'bg-teal-accent text-white' : 'bg-bg-light text-text-muted'
               }`}
             >
               {i < idx ? (
@@ -178,12 +165,12 @@ function StepBar({ current }: { current: Step }) {
                 i + 1
               )}
             </div>
-            <span className={`text-xs font-medium hidden sm:block ${i === idx ? 'text-slate-900' : 'text-slate-400'}`}>
+            <span className={`text-xs font-medium hidden sm:block ${i === idx ? 'text-text-primary' : 'text-text-muted'}`}>
               {STEP_LABELS[s]}
             </span>
           </div>
           {i < steps.length - 1 && (
-            <div className={`flex-1 h-px mx-2 ${i < idx ? 'bg-blue-300' : 'bg-slate-200'}`} />
+            <div className={`flex-1 h-px mx-2 ${i < idx ? 'bg-teal-accent/40' : 'bg-border'}`} />
           )}
         </div>
       ))}
@@ -229,9 +216,9 @@ export default function ConfirmarPage() {
     setSubmitting(true);
     setSubmitError('');
     try {
-      const answers: AnswerItem[] = Object.entries(respuestas).map(([questionId, respuesta]) => ({
+      const answers: AnswerItem[] = Object.entries(respuestas).map(([questionId, answer]) => ({
         questionId,
-        respuesta,
+        answer,
       }));
 
       const { data } = await api.post<AttendanceResponse>('/attendance', {
@@ -273,30 +260,30 @@ export default function ConfirmarPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-10">
-      <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-        <Link href="/eventos" className="hover:text-slate-700">Eventos</Link>
+      <nav className="flex items-center gap-2 text-sm text-text-muted mb-6">
+        <Link href="/eventos" className="hover:text-text-primary transition-colors">Eventos</Link>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
-        <Link href={`/eventos/${params.id}`} className="hover:text-slate-700 truncate">
+        <Link href={`/eventos/${params.id}`} className="hover:text-text-primary transition-colors truncate">
           {evento?.titulo || 'Evento'}
         </Link>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
         </svg>
-        <span className="text-slate-900 font-medium">Confirmar</span>
+        <span className="text-text-primary font-medium">Confirmar</span>
       </nav>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
-        <h1 className="text-2xl font-bold text-slate-900 mb-1">Confirmar asistencia</h1>
-        {evento && <p className="text-sm text-slate-500 mb-8">{evento.titulo}</p>}
+      <div className="bg-surface rounded-xl border border-border shadow-sm p-6 md:p-8">
+        <h1 className="text-2xl font-bold text-text-primary mb-1">Confirmar asistencia</h1>
+        {evento && <p className="text-sm text-text-muted mb-8">{evento.titulo}</p>}
 
         <StepBar current={step} />
 
         {/* ── Step 1: Tipo de asistencia ── */}
         {step === 'modalidad' && (
           <div>
-            <h2 className="text-base font-semibold text-slate-900 mb-4">¿Cómo vas a participar?</h2>
+            <h2 className="text-base font-semibold text-text-primary mb-4">¿Cómo desea participar?</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {(['PRESENCIAL', 'VIRTUAL'] as TipoAsistencia[]).map((m) => (
                 <button
@@ -305,29 +292,29 @@ export default function ConfirmarPage() {
                   onClick={() => setTipoAsistencia(m)}
                   className={`p-5 rounded-xl border-2 text-left transition-all ${
                     tipoAsistencia === m
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-slate-200 hover:border-slate-300'
+                      ? 'border-teal-accent bg-teal-soft/10'
+                      : 'border-border hover:border-teal-accent/50'
                   }`}
                 >
-                  <div className={`text-sm font-semibold mb-1 ${tipoAsistencia === m ? 'text-blue-700' : 'text-slate-900'}`}>
+                  <div className={`text-sm font-semibold mb-1 ${tipoAsistencia === m ? 'text-teal-dark' : 'text-text-primary'}`}>
                     {m === 'PRESENCIAL' ? 'Presencial' : 'Virtual'}
                   </div>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-text-muted">
                     {m === 'PRESENCIAL'
-                      ? 'Asistís en persona al lugar del evento.'
-                      : 'Participás de forma remota por plataforma virtual.'}
+                      ? 'Asiste en persona al lugar del evento.'
+                      : 'Participa de forma remota por plataforma virtual.'}
                   </p>
                 </button>
               ))}
             </div>
 
-            <button
+            <PrimaryButton
               onClick={() => hasSurvey ? setStep('encuesta') : handleConfirmar()}
               disabled={submitting}
-              className="w-full py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-60 transition-colors"
+              className="w-full"
             >
               {submitting ? 'Confirmando...' : hasSurvey ? 'Continuar a encuesta' : 'Confirmar asistencia'}
-            </button>
+            </PrimaryButton>
             {submitError && (
               <p className="mt-3 text-sm text-red-500 text-center">{submitError}</p>
             )}
@@ -337,11 +324,11 @@ export default function ConfirmarPage() {
         {/* ── Step 2: Encuesta ── */}
         {step === 'encuesta' && hasSurvey && (
           <div>
-            <h2 className="text-base font-semibold text-slate-900 mb-2">
+            <h2 className="text-base font-semibold text-text-primary mb-2">
               {evento?.survey?.titulo || 'Encuesta del evento'}
             </h2>
-            <p className="text-sm text-slate-500 mb-6">
-              Respondé las siguientes preguntas antes de confirmar tu asistencia.
+            <p className="text-sm text-text-muted mb-6">
+              Responda las siguientes preguntas antes de confirmar su asistencia.
             </p>
 
             <div className="space-y-7">
@@ -350,13 +337,13 @@ export default function ConfirmarPage() {
                 if (pSection.length === 0) return null;
                 return (
                   <div key={seccion}>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-4">
                       {seccion === 'ANALISIS' ? 'Análisis' : 'Propuestas'}
                     </p>
                     <div className="space-y-6">
                       {pSection.map(p => (
                         <div key={p.id}>
-                          <p className="text-sm font-medium text-slate-900 mb-2">
+                          <p className="text-sm font-medium text-text-primary mb-2">
                             {p.texto}
                             {p.esRequerida && <span className="text-red-400 ml-1">*</span>}
                           </p>
@@ -380,21 +367,21 @@ export default function ConfirmarPage() {
             )}
 
             <div className="flex gap-3 mt-8">
-              <button
+              <SecondaryButton
                 type="button"
                 onClick={() => setStep('modalidad')}
-                className="flex-1 py-3 rounded-lg border border-slate-200 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                className="flex-1"
               >
                 Atrás
-              </button>
-              <button
+              </SecondaryButton>
+              <PrimaryButton
                 type="button"
                 onClick={handleConfirmar}
                 disabled={submitting}
-                className="flex-1 py-3 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 disabled:opacity-60 transition-colors"
+                className="flex-1"
               >
                 {submitting ? 'Confirmando...' : 'Confirmar asistencia'}
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         )}
@@ -402,28 +389,25 @@ export default function ConfirmarPage() {
         {/* ── Step 3: QR ── */}
         {step === 'confirmacion' && resultado && (
           <div className="text-center">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 rounded-full bg-teal-soft/20 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-teal-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold text-slate-900 mb-1">Asistencia confirmada</h2>
-            <p className="text-sm text-slate-500 mb-6">
+            <h2 className="text-xl font-bold text-text-primary mb-1">Asistencia confirmada</h2>
+            <p className="text-sm text-text-muted mb-6">
               Modalidad: {resultado.tipoAsistencia === 'PRESENCIAL' ? 'Presencial' : 'Virtual'}
             </p>
 
-            <QRDisplay code={resultado.qrCode} />
+            <QRDisplay code={resultado.qrCode} eventoId={params.id} />
 
-            <p className="text-xs text-slate-400 mt-6 max-w-sm mx-auto">
-              Guardá o tomá captura de tu código QR. Lo vas a necesitar para acceder al evento.
+            <p className="text-xs text-text-muted mt-6 max-w-sm mx-auto">
+              Guarde o tome captura de su código QR. Lo necesitará para acceder al evento.
             </p>
 
-            <Link
-              href="/eventos"
-              className="mt-8 inline-block px-6 py-2.5 rounded-lg border border-slate-200 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
-            >
-              Ver más eventos
-            </Link>
+            <div className="mt-8">
+              <SecondaryButton href="/eventos">Ver más eventos</SecondaryButton>
+            </div>
           </div>
         )}
       </div>
