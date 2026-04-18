@@ -62,12 +62,14 @@ describe('AuthProvider', () => {
   });
 
   it('login function updates user state', async () => {
+    const mockUser = { id: '1', email: 'test@test.com', role: 'USER' };
     const mockResponse = {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
-      user: { id: '1', email: 'test@test.com', role: 'USER' },
+      user: mockUser,
     };
     (api.post as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockResponse });
+    (api.get as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockUser });
 
     const TestComponent = () => {
       const { login, user } = useAuth();

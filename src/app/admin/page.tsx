@@ -1182,9 +1182,14 @@ export default function AdminPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-white/20 bg-white/10 backdrop-blur-sm px-3 py-6">
-        <p className="text-xs font-semibold text-white/50 uppercase tracking-wider px-3 mb-3">Administración</p>
-        <nav className="space-y-0.5">
+      <aside className="relative overflow-hidden hidden md:flex flex-col w-56 shrink-0 border-r border-white/20 px-3 py-6" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
+        <div className="pointer-events-none absolute inset-0 select-none">
+          <Image src="/papiro2.svg" alt="" width={220} height={220} className="absolute -left-10 top-1/4 opacity-[0.12] rotate-12" />
+          <Image src="/papiro3.svg" alt="" width={160} height={160} className="absolute -right-8 bottom-10 opacity-[0.09] -rotate-6" />
+          <Image src="/papiro2.svg" alt="" width={140} height={140} className="absolute left-1/4 -bottom-6 opacity-[0.07] rotate-45" />
+        </div>
+        <p className="relative z-10 text-xs font-semibold text-white/50 uppercase tracking-wider px-3 mb-3">Administración</p>
+        <nav className="relative z-10 space-y-0.5">
           {NAV.map(item => (
             <button
               key={item.id}
@@ -1200,7 +1205,7 @@ export default function AdminPage() {
       </aside>
 
       {/* Mobile tabs */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/10 backdrop-blur-sm border-t border-white/20 flex overflow-x-auto">
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-white/20 flex overflow-x-auto overflow-hidden" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
         {NAV.map(item => (
           <button
             key={item.id}
@@ -1215,8 +1220,8 @@ export default function AdminPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 md:p-8 pb-20 md:pb-8" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
-        <h1 className="text-2xl font-bold text-white mb-6 hidden md:block">
+      <div className="flex-1 p-4 md:p-8 pb-20 md:pb-8 bg-[#f8fafc]">
+        <h1 className="text-2xl font-bold text-text-primary mb-6 hidden md:block">
           {NAV.find(n => n.id === tab)?.label}
         </h1>
 

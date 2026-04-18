@@ -7,6 +7,7 @@ const validRegisterData = {
   amaterno: 'López',
   nombres: 'Juan Carlos',
   email: 'test@test.com',
+  password: 'Password1',
   telefono: '5512345678',
   redesSociales: undefined,
   calle: 'Av. Principal 123',
