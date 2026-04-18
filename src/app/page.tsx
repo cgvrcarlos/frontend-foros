@@ -100,8 +100,8 @@ export default function Home() {
             <Image
               src="/logo.svg"
               alt="Foro Ciudadano"
-              width={80}
-              height={80}
+              width={300}
+              height={300}
               className="drop-shadow-lg"
             />
           </div>
@@ -117,7 +117,7 @@ export default function Home() {
           </h1>
 
           <p className="text-lg md:text-xl text-white/70 leading-relaxed mb-10 max-w-xl mx-auto">
-            Registrate, asistí a eventos y hacé escuchar tu voz a través de encuestas y propuestas comunitarias.
+            Registrate, asiste a eventos y has escuchar tu voz a través de encuestas y propuestas comunitarias.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -132,7 +132,7 @@ export default function Home() {
               href="/auth/register"
               className="px-8 py-4 rounded-xl bg-white/10 border border-white/30 text-white font-semibold hover:bg-white/20 transition-all text-base backdrop-blur-sm hover:-translate-y-0.5"
             >
-              Registrarse gratis
+              Registrarse
             </Link>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function Home() {
           <div className="flex items-center justify-between mb-10">
             <div>
               <h2 className="text-3xl font-bold text-slate-900">Próximos Eventos</h2>
-              <p className="text-slate-500 mt-1">Encontrá el que te interesa y confirmá tu asistencia</p>
+              <p className="text-slate-500 mt-1">Encuentra el que te interesa y confirmá tu asistencia</p>
             </div>
             <Link
               href="/eventos"
@@ -210,7 +210,7 @@ export default function Home() {
               </div>
               <h3 className="font-semibold text-slate-900 text-lg mb-2">2. Confirmá asistencia</h3>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Elegí el evento, elegí presencial o virtual, y obtené tu QR único.
+                Elige el evento, elige presencial o virtual, y obt&eacute;n tu QR de acceso único.
               </p>
             </div>
 
@@ -222,7 +222,7 @@ export default function Home() {
               </div>
               <h3 className="font-semibold text-slate-900 text-lg mb-2">3. Participá</h3>
               <p className="text-slate-500 text-sm leading-relaxed">
-                Completá encuestas y dejá tus propuestas para mejorar la comunidad.
+                Completa encuestas y dejá tus propuestas para contribuir a mejorar la comunidad.
               </p>
             </div>
           </div>

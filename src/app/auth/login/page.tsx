@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema, type LoginFormData } from '@/schemas/auth';
 import { useAuth } from '@/components/auth/AuthProvider';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -40,7 +41,31 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
+    <div className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
+      {/* Decorative papiros */}
+      <div className="pointer-events-none absolute inset-0 select-none">
+        <Image
+          src="/papiro2.svg"
+          alt=""
+          width={320}
+          height={320}
+          className="absolute -left-16 top-1/4 opacity-[0.12] rotate-12"
+        />
+        <Image
+          src="/papiro2.svg"
+          alt=""
+          width={280}
+          height={280}
+          className="absolute -right-12 bottom-1/4 opacity-[0.10] -rotate-12"
+        />
+        <Image
+          src="/papiro3.svg"
+          alt=""
+          width={200}
+          height={200}
+          className="absolute left-1/4 -bottom-8 opacity-[0.08]"
+        />
+      </div>  
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8">
           <div className="mb-8">

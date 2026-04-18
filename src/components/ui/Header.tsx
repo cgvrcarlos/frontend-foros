@@ -17,7 +17,7 @@ export function Header() {
     <header className="fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur border-b border-slate-100 h-16 shadow-sm">
       <div className="max-w-6xl mx-auto h-full px-4 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/logo.svg" alt="Foro Ciudadano" width={32} height={32} className="shrink-0" />
+          <Image src="/logo.svg" alt="Foro Ciudadano" style={{backgroundColor:'rgb(7,58,56)'}} width={82} height={32} className="shrink-0" />
           <span className="text-lg font-bold tracking-tight" style={{ color: '#063a3a' }}>
             Foro Ciudadano
           </span>

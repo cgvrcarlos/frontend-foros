@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useAuth } from '@/components/auth/AuthProvider';
 import api from '@/lib/api';
 import type { Evento, Stats, PonenteAdmin, UserAdmin, PaginatedResponse, Survey, Pregunta, TipoPregunta, AttendanceResponse } from '@/types/api';
@@ -805,8 +806,13 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="text-slate-400">Verificando permisos...</div>
+      <div className="relative overflow-hidden min-h-[calc(100vh-4rem)] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
+        <div className="pointer-events-none absolute inset-0 select-none">
+          <Image src="/papiro2.svg" alt="" width={320} height={320} className="absolute -left-16 top-1/4 opacity-[0.12] rotate-12" />
+          <Image src="/papiro2.svg" alt="" width={280} height={280} className="absolute -right-12 bottom-1/4 opacity-[0.10] -rotate-12" />
+          <Image src="/papiro3.svg" alt="" width={200} height={200} className="absolute left-1/4 -bottom-8 opacity-[0.08]" />
+        </div>
+        <div className="relative z-10 text-white/60">Verificando permisos...</div>
       </div>
     );
   }
@@ -816,15 +822,15 @@ export default function AdminPage() {
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-slate-200 bg-white px-3 py-6">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 mb-3">Administración</p>
+      <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-white/20 bg-white/10 backdrop-blur-sm px-3 py-6">
+        <p className="text-xs font-semibold text-white/50 uppercase tracking-wider px-3 mb-3">Administración</p>
         <nav className="space-y-0.5">
           {NAV.map(item => (
             <button
               key={item.id}
               onClick={() => setTab(item.id)}
               className={`w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                tab === item.id ? 'bg-blue-50 text-blue-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                tab === item.id ? 'bg-white/20 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
               {item.label}
@@ -834,13 +840,13 @@ export default function AdminPage() {
       </aside>
 
       {/* Mobile tabs */}
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-slate-200 flex overflow-x-auto">
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/10 backdrop-blur-sm border-t border-white/20 flex overflow-x-auto">
         {NAV.map(item => (
           <button
             key={item.id}
             onClick={() => setTab(item.id)}
             className={`flex-1 min-w-max py-3 px-2 text-xs font-medium transition-colors ${
-              tab === item.id ? 'text-blue-600' : 'text-slate-500'
+              tab === item.id ? 'text-white' : 'text-white/60'
             }`}
           >
             {item.label}
@@ -849,8 +855,8 @@ export default function AdminPage() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-4 md:p-8 pb-20 md:pb-8 bg-slate-50">
-        <h1 className="text-2xl font-bold text-slate-900 mb-6 hidden md:block">
+      <div className="flex-1 p-4 md:p-8 pb-20 md:pb-8" style={{ background: 'linear-gradient(135deg, #063a3a 0%, #0a5252 55%, #1a2f5a 100%)' }}>
+        <h1 className="text-2xl font-bold text-white mb-6 hidden md:block">
           {NAV.find(n => n.id === tab)?.label}
         </h1>
 
