@@ -3,14 +3,16 @@
 export type Genero = 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'NO_DICE';
 export type GradoEstudios = 'PRIMARIA' | 'SECUNDARIA' | 'PREPARATORIA' | 'LICENCIATURA' | 'POSGRADO' | 'OTRO';
 export type SituacionLaboral = 'ESTUDIANTE' | 'EMPLEADO' | 'AUTOEMPLEADO' | 'DESEMPLEADO' | 'OTRO';
+export type Role = 'ADMIN' | 'PONENTE' | 'ASISTENTE';
 
 export interface User {
   id: string;
   email: string;
-  nombres: string;
+  nombre?: string;  // Account-level nombre (from unified account)
+  nombres: string;  // UserProfile-level nombres
   apaterno: string;
   amaterno: string;
-  role: 'USER' | 'ADMIN' | 'PONENTE';
+  roles: Role[];
   telefono?: string | null;
   redesSociales?: string | null;
   calle?: string | null;
@@ -62,6 +64,8 @@ export interface Ponencia {
 
 export interface PonenciaAdmin {
   id: string;
+  titulo: string;
+  descripcion?: string | null;
   lugar: string;
   horaInicio: string;
   horaFin: string;
@@ -136,6 +140,14 @@ export interface Stats {
   totalEventos: number;
   totalAsistencias: number;
   totalPonentes: number;
+}
+
+export interface EventStats {
+  evento: { id: string; titulo: string; fechaHora: string };
+  totalConfirmados: number;
+  confirmadosPresenciales: number;
+  confirmadosVirtuales: number;
+  totalRespuestas: number;
 }
 
 export interface PonenteAdmin {
