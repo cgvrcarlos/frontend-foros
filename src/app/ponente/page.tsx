@@ -9,6 +9,8 @@ import api from '@/lib/api';
 
 interface MiPonencia {
   id: string;
+  titulo: string;
+  descripcion?: string | null;
   lugar: string;
   horaInicio: string;
   horaFin: string;
@@ -18,6 +20,14 @@ interface MiPonencia {
     fechaHora: string;
     survey?: { id: string } | null;
   };
+}
+
+interface MisPonenciasResponse {
+  id: string;
+  nombre: string;
+  email: string;
+  bio?: string | null;
+  ponencias: MiPonencia[];
 }
 
 function PonenciaCard({ ponencia }: { ponencia: MiPonencia }) {
@@ -70,16 +80,16 @@ export default function PonentePanel() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'PONENTE')) {
+    if (!authLoading && (!user || !user.roles?.includes('PONENTE'))) {
       router.replace('/auth/login');
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user?.role !== 'PONENTE') return;
+    if (!user?.roles?.includes('PONENTE')) return;
 
-    api.get<MiPonencia[]>('/ponentes/mis-ponencias')
-      .then(res => setPonencias(res.data))
+    api.get<MisPonenciasResponse>('/ponentes/mis-ponencias')
+      .then(res => setPonencias(res.data.ponencias))
       .catch(() => setError('No se pudieron cargar tus ponencias.'))
       .finally(() => setLoading(false));
   }, [user]);
@@ -92,7 +102,7 @@ export default function PonentePanel() {
     );
   }
 
-  if (!user || user.role !== 'PONENTE') return null;
+  if (!user || !user.roles?.includes('PONENTE')) return null;
 
   return (
     <>

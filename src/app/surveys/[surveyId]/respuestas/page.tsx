@@ -28,7 +28,7 @@ export default function SurveyResponsesPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!authLoading && (!user || (user.role !== 'ADMIN' && user.role !== 'PONENTE'))) {
+    if (!authLoading && (!user || (!user.roles?.includes('ADMIN') && !user.roles?.includes('PONENTE')))) {
       router.replace('/auth/login');
     }
   }, [user, authLoading, router]);
@@ -90,10 +90,10 @@ export default function SurveyResponsesPage() {
       <div className="relative z-10 max-w-3xl mx-auto px-4 py-10">
         <nav className="flex items-center gap-2 text-sm text-white/60 mb-6">
           <Link
-            href={user.role === 'ADMIN' ? '/admin' : '/ponente'}
+            href={user.roles?.includes('ADMIN') ? '/admin' : '/ponente'}
             className="hover:text-white transition-colors"
           >
-            {user.role === 'ADMIN' ? 'Admin' : 'Mi panel'}
+            {user.roles?.includes('ADMIN') ? 'Admin' : 'Mi panel'}
           </Link>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

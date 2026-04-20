@@ -33,7 +33,7 @@ export function Header() {
 
           {user ? (
             <>
-              {user.role === 'ADMIN' && (
+              {user.roles?.includes('ADMIN') && (
                 <Link
                   href="/admin"
                   className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
@@ -41,7 +41,7 @@ export function Header() {
                   Admin
                 </Link>
               )}
-              {user.role === 'PONENTE' && (
+              {user.roles?.includes('PONENTE') && (
                 <Link
                   href="/ponente"
                   className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"

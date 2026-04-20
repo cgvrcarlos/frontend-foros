@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth/AuthProvider';
 import api from '@/lib/api';
-import type { Evento, Stats, PonenteAdmin, UserAdmin, PaginatedResponse, Survey, Pregunta, TipoPregunta, AttendanceResponse, PonenciaAdmin } from '@/types/api';
+import type { Evento, Stats, PonenteAdmin, UserAdmin, PaginatedResponse, Survey, Pregunta, TipoPregunta, AttendanceResponse, PonenciaAdmin, EventStats } from '@/types/api';
 
 type Tab = 'estadisticas' | 'eventos' | 'encuestas' | 'asistencias' | 'usuarios' | 'ponentes' | 'ponencias';
 
@@ -590,6 +590,7 @@ function AsistenciasPanel() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [eventoId, setEventoId] = useState('');
   const [asistencias, setAsistencias] = useState<AttendanceResponse[]>([]);
+  const [stats, setStats] = useState<EventStats | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -600,8 +601,14 @@ function AsistenciasPanel() {
     if (!id) return;
     setLoading(true);
     try {
-      const { data } = await api.get<AttendanceResponse[]>(`/attendance/event/${id}`);
-      setAsistencias(data);
+      const [attRes, statsRes] = await Promise.all([
+        api.get<AttendanceResponse[]>(`/attendance/event/${id}`),
+        api.get<EventStats>(`/stats/event/${id}`),
+      ]);
+      setAsistencias(attRes.data);
+      setStats(statsRes.data);
+    } catch {
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -610,11 +617,12 @@ function AsistenciasPanel() {
   const handleSelect = (id: string) => {
     setEventoId(id);
     setAsistencias([]);
+    setStats(null);
     if (id) loadAsistencias(id);
   };
 
-  const presenciales = asistencias.filter(a => a.tipoAsistencia === 'PRESENCIAL').length;
-  const virtuales = asistencias.filter(a => a.tipoAsistencia === 'VIRTUAL').length;
+  const presenciales = stats?.confirmadosPresenciales ?? (asistencias.length ? asistencias.filter(a => a.tipoAsistencia === 'PRESENCIAL').length : 0);
+  const virtuales = stats?.confirmadosVirtuales ?? (asistencias.length ? asistencias.filter(a => a.tipoAsistencia === 'VIRTUAL').length : 0);
 
   return (
     <div>
@@ -632,17 +640,18 @@ function AsistenciasPanel() {
 
       {eventoId && !loading && asistencias.length === 0 && (
         <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-          <p className="text-slate-400 text-sm">No hay asistencias confirmadas para este evento.</p>
+          <p className="text-slate-400 text-sm">No hay asistentes confirmados para este evento.</p>
         </div>
       )}
 
-      {asistencias.length > 0 && (
+      {asistencias.length > 0 && stats && (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'Total', value: asistencias.length },
-              { label: 'Presenciales', value: presenciales },
-              { label: 'Virtuales', value: virtuales },
+              { label: 'Total', value: stats.totalConfirmados },
+              { label: 'Presenciales', value: stats.confirmadosPresenciales },
+              { label: 'Virtuales', value: stats.confirmadosVirtuales },
+              { label: 'Encuestas', value: stats.totalRespuestas },
             ].map(c => (
               <div key={c.label} className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 text-center">
                 <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">{c.label}</p>
@@ -960,20 +969,23 @@ function PonentesPanelContent() {
 
 interface PonenciaFormProps {
   eventoId: string;
-  ponencia?: PonenciaAdmin;
+  mitosis?: PonenciaAdmin;
   ponentes: PonenteAdmin[];
   onClose: () => void;
   onSave: () => void;
 }
 
-function PonenciaForm({ eventoId, ponencia, ponentes, onClose, onSave }: PonenciaFormProps) {
-  const isEdit = !!ponencia;
+function PonenciaForm(props: PonenciaFormProps) {
+  const { eventoId, mitosis: mitosis, ponentes, onClose, onSave } = props;
+  const isEdit = !!mitosis;
   const [form, setForm] = useState({
-    ponenteId: ponencia?.ponenteId ?? '',
-    lugar: ponencia?.lugar ?? '',
-    horaInicio: ponencia?.horaInicio ?? '',
-    horaFin: ponencia?.horaFin ?? '',
-    orden: ponencia?.orden ?? 0,
+    ponenteId: mitosis?.ponenteId ?? '',
+    titulo: mitosis?.titulo ?? '',
+    descripcion: mitosis?.descripcion ?? '',
+    lugar: mitosis?.lugar ?? '',
+    horaInicio: mitosis?.horaInicio ?? '',
+    horaFin: mitosis?.horaFin ?? '',
+    orden: mitosis?.orden ?? 0,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -988,7 +1000,7 @@ function PonenciaForm({ eventoId, ponencia, ponentes, onClose, onSave }: Ponenci
     setError('');
     try {
       if (isEdit) {
-        await api.put(`/ponencias/${ponencia!.id}`, form);
+        await api.put(`/ponencias/${mitosis!.id}`, form);
       } else {
         await api.post(`/eventos/${eventoId}/ponencias`, form);
       }
@@ -1014,6 +1026,14 @@ function PonenciaForm({ eventoId, ponencia, ponentes, onClose, onSave }: Ponenci
               <option value="">— Seleccionar ponente —</option>
               {ponentes.map(p => <option key={p.id} value={p.id}>{p.nombre} ({p.email})</option>)}
             </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Título de la ponencia *</label>
+            <input required value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} className={inputCls} placeholder="Ej: El futuro de la participación ciudadana" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
+            <textarea value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} rows={2} className={inputCls} placeholder="Descripción opcional de la ponencia" />
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Lugar *</label>
@@ -1087,7 +1107,7 @@ function PonenciasPanel() {
       {(showForm || editPonencia) && (
         <PonenciaForm
           eventoId={eventoId}
-          ponencia={editPonencia}
+          mitosis={editPonencia}
           ponentes={ponentes}
           onClose={() => { setShowForm(false); setEditPonencia(undefined); }}
           onSave={() => loadPonencias(eventoId)}
@@ -1123,18 +1143,23 @@ function PonenciasPanel() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Ponente</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Título</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Ponente</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Lugar</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Horario</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Horario</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {ponencias.sort((a, b) => a.orden - b.orden).map(p => (
                 <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-900">{p.ponente.nombre}</td>
+                  <td className="px-4 py-3 font-medium text-slate-900">
+                    <div>{p.titulo}</div>
+                    {p.descripcion && <div className="text-xs text-slate-400 mt-0.5 truncate max-w-xs">{p.descripcion}</div>}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 hidden md:table-cell">{p.ponente.nombre}</td>
                   <td className="px-4 py-3 text-slate-500 hidden md:table-cell">{p.lugar}</td>
-                  <td className="px-4 py-3 text-slate-400 text-xs hidden md:table-cell">{p.horaInicio} – {p.horaFin}</td>
+                  <td className="px-4 py-3 text-slate-400 text-xs hidden lg:table-cell">{p.horaInicio} – {p.horaFin}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-3">
                       <button onClick={() => setEditPonencia(p)} className="text-xs text-teal-accent hover:text-teal-accent/80 font-medium">Editar</button>
@@ -1159,7 +1184,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<Tab>('estadisticas');
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'ADMIN')) {
+    if (!loading && (!user || !user.roles?.includes('ADMIN'))) {
       router.replace('/auth/login');
     }
   }, [user, loading, router]);
@@ -1177,7 +1202,7 @@ export default function AdminPage() {
     );
   }
 
-  if (!user || user.role !== 'ADMIN') return null;
+  if (!user || !user.roles?.includes('ADMIN')) return null;
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)]">

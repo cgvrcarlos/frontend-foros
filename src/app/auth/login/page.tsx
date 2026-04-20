@@ -28,9 +28,9 @@ export default function LoginPage() {
     try {
       const user = await login(data.email, data.password);
 
-      if (user.role === 'ADMIN') {
+      if (user.roles?.includes('ADMIN')) {
         router.replace('/admin');
-      } else if (user.role === 'PONENTE') {
+      } else if (user.roles?.includes('PONENTE')) {
         router.replace('/ponente');
       } else {
         router.replace('/eventos');
