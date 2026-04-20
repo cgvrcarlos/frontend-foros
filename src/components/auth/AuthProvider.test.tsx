@@ -41,7 +41,7 @@ describe('AuthProvider', () => {
   });
 
   it('loads user from API when token exists', async () => {
-    const mockUser = { id: '1', email: 'test@test.com', role: 'USER' };
+    const mockUser = { id: '1', email: 'test@test.com', roles: ['ASISTENTE'] };
     (api.get as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockUser });
     localStorage.setItem('accessToken', 'mock-token');
 
@@ -62,7 +62,7 @@ describe('AuthProvider', () => {
   });
 
   it('login function updates user state', async () => {
-    const mockUser = { id: '1', email: 'test@test.com', role: 'USER' };
+    const mockUser = { id: '1', email: 'test@test.com', roles: ['ASISTENTE'] };
     const mockResponse = {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
@@ -104,7 +104,7 @@ describe('AuthProvider', () => {
 
   it('logout clears user and tokens', async () => {
     // Setup: usuario cargado desde API
-    const mockUser = { id: '1', email: 'test@test.com', role: 'USER' };
+    const mockUser = { id: '1', email: 'test@test.com', roles: ['ASISTENTE'] };
     localStorage.setItem('accessToken', 'mock-token');
     localStorage.setItem('refreshToken', 'mock-refresh');
     (api.get as ReturnType<typeof vi.fn>).mockResolvedValue({ data: mockUser });
