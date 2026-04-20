@@ -39,7 +39,7 @@ function formatSituacionLaboral(s?: string | null) {
     DESEMPLEADO: 'Desempleado',
     OTRO: 'Otro',
   };
-  return s ? (map[s] ?? s) : undefined;
+return s ? (map[s] ?? s) : undefined;
 }
 
 const GENERO_OPTIONS: { value: Genero | ''; label: string }[] = [
@@ -111,7 +111,7 @@ function ProfileEditForm({ user, onClose, onSave }: ProfileFormProps) {
       await api.patch('/users/me', payload);
       onSave();
       onClose();
-} catch (err: unknown) {
+    } catch (err: unknown) {
       const errObj = err as { response?: { data?: { message?: string } } };
       setError(errObj.response?.data?.message || 'Error al guardar el perfil.');
     } finally {

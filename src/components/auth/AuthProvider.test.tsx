@@ -62,7 +62,7 @@ describe('AuthProvider', () => {
   });
 
   it('login function updates user state', async () => {
-    const mockUser = { id: '1', email: 'test@test.com', roles: ['ASISTENTE'] };
+    const mockUser = { id: '1', email: 'test@test.com', roles: ['ASISTENTE'] as const };
     const mockResponse = {
       accessToken: 'access-token',
       refreshToken: 'refresh-token',

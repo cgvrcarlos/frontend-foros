@@ -969,23 +969,22 @@ function PonentesPanelContent() {
 
 interface PonenciaFormProps {
   eventoId: string;
-  mitosis?: PonenciaAdmin;
+  ponencia?: PonenciaAdmin;
   ponentes: PonenteAdmin[];
   onClose: () => void;
   onSave: () => void;
 }
 
-function PonenciaForm(props: PonenciaFormProps) {
-  const { eventoId, mitosis: mitosis, ponentes, onClose, onSave } = props;
-  const isEdit = !!mitosis;
+function PonenciaForm({ eventoId, ponencia, ponentes, onClose, onSave }: PonenciaFormProps) {
+  const isEdit = !!ponencia;
   const [form, setForm] = useState({
-    ponenteId: mitosis?.ponenteId ?? '',
-    titulo: mitosis?.titulo ?? '',
-    descripcion: mitosis?.descripcion ?? '',
-    lugar: mitosis?.lugar ?? '',
-    horaInicio: mitosis?.horaInicio ?? '',
-    horaFin: mitosis?.horaFin ?? '',
-    orden: mitosis?.orden ?? 0,
+    ponenteId: ponencia?.ponenteId ?? '',
+    titulo: ponencia?.titulo ?? '',
+    descripcion: ponencia?.descripcion ?? '',
+    lugar: ponencia?.lugar ?? '',
+    horaInicio: ponencia?.horaInicio ?? '',
+    horaFin: ponencia?.horaFin ?? '',
+    orden: ponencia?.orden ?? 0,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -1000,7 +999,7 @@ function PonenciaForm(props: PonenciaFormProps) {
     setError('');
     try {
       if (isEdit) {
-        await api.put(`/ponencias/${mitosis!.id}`, form);
+        await api.put(`/ponencias/${ponencia!.id}`, form);
       } else {
         await api.post(`/eventos/${eventoId}/ponencias`, form);
       }
@@ -1107,7 +1106,7 @@ function PonenciasPanel() {
       {(showForm || editPonencia) && (
         <PonenciaForm
           eventoId={eventoId}
-          mitosis={editPonencia}
+          ponencia={editPonencia}
           ponentes={ponentes}
           onClose={() => { setShowForm(false); setEditPonencia(undefined); }}
           onSave={() => loadPonencias(eventoId)}

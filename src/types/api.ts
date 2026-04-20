@@ -12,7 +12,7 @@ export interface User {
   nombres: string;  // UserProfile-level nombres
   apaterno: string;
   amaterno: string;
-  roles: Role[];
+roles: Role[];
   telefono?: string | null;
   redesSociales?: string | null;
   calle?: string | null;
@@ -64,7 +64,7 @@ export interface Ponencia {
 
 export interface PonenciaAdmin {
   id: string;
-  titulo: string;
+titulo: string;
   descripcion?: string | null;
   lugar: string;
   horaInicio: string;
