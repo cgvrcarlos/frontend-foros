@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth/AuthProvider';
 import api from '@/lib/api';
@@ -630,10 +631,21 @@ function AsistenciasPanel() {
 
       <div className="mb-6">
         <label className="block text-sm font-medium text-slate-700 mb-1">Seleccioná un evento</label>
-        <select value={eventoId} onChange={e => handleSelect(e.target.value)} className={inputCls}>
-          <option value="">— Seleccionar evento —</option>
-          {eventos.map(ev => <option key={ev.id} value={ev.id}>{ev.titulo}</option>)}
-        </select>
+        <div className="flex gap-3 items-center">
+          <select value={eventoId} onChange={e => handleSelect(e.target.value)} className={`${inputCls} flex-1`}>
+            <option value="">— Seleccionar evento —</option>
+            {eventos.map(ev => <option key={ev.id} value={ev.id}>{ev.titulo}</option>)}
+          </select>
+          {eventoId && (
+            <Link
+              href={`/admin/attendance/${eventoId}`}
+              className="shrink-0 px-4 py-2 text-sm font-semibold text-white rounded-lg hover:opacity-90 transition-colors whitespace-nowrap"
+              style={{ background: '#063a3a' }}
+            >
+              Ver dashboard
+            </Link>
+          )}
+        </div>
       </div>
 
       {eventoId && loading && <div className="animate-pulse h-40 bg-slate-200 rounded-xl" />}

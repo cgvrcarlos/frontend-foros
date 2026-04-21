@@ -49,6 +49,16 @@ export function Header() {
                   Mi panel
                 </Link>
               )}
+              {user.roles?.includes('STAFF') && (
+                <Link href="/staff" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+                  Escanear QR
+                </Link>
+              )}
+              {!user.roles?.includes('ADMIN') && !user.roles?.includes('PONENTE') && !user.roles?.includes('STAFF') && (
+                <Link href="/profile" className="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors">
+                  Mi perfil
+                </Link>
+              )}
               <span className="hidden sm:block text-sm text-slate-500 px-2">
                 {user.nombres || user.email}
               </span>

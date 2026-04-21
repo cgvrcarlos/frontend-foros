@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
-import type { Evento, Pregunta, TipoAsistencia, AttendanceResponse, AnswerItem } from '@/types/api';
+import type { Evento, Pregunta, TipoAsistencia, AttendanceResponse, AnswerItem, MyAttendance } from '@/types/api';
 
 // ─── QR Display ───────────────────────────────────────────────────────────────
 
@@ -185,7 +185,7 @@ export default function ConfirmarPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [evento, setEvento] = useState<Evento | null>(null);
+const [evento, setEvento] = useState<Evento | null>(null);
   const [loadingEvento, setLoadingEvento] = useState(true);
   const [step, setStep] = useState<Step>('modalidad');
   const [tipoAsistencia, setTipoAsistencia] = useState<TipoAsistencia>('PRESENCIAL');
@@ -193,17 +193,40 @@ export default function ConfirmarPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [resultado, setResultado] = useState<AttendanceResponse | null>(null);
+  const [existingAttendance, setExistingAttendance] = useState<MyAttendance | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      router.replace(`/auth/register?redirect=/eventos/${params.id}/confirmar`);
+      router.replace(`/auth/register?redirect=/eventos/${params.id}`);
     }
   }, [authLoading, user, router, params.id]);
 
   useEffect(() => {
-    if (!params.id) return;
-    api.get<Evento>(`/eventos/${params.id}`)
-      .then(res => setEvento(res.data))
+    const eventoId = params.id as string;
+    if (!eventoId) return;
+    // Fetch evento Y mis attendances en paralelo
+    Promise.all([
+      api.get<Evento>(`/eventos/${eventoId}`),
+      api.get<MyAttendance[]>('/attendance/my').catch(() => ({ data: [] })),
+    ])
+      .then(([eventoRes, attendancesRes]) => {
+        setEvento(eventoRes.data);
+        // Busco si ya tengo asistencia para este evento
+        const myAttendance = attendancesRes.data.find(
+          (a) => a.event.id === eventoId
+        );
+        if (myAttendance) {
+          setExistingAttendance(myAttendance);
+          // Ya tengo asistencia → ir directo a confirmación
+          setResultado({
+            id: myAttendance.id,
+            qrCode: myAttendance.qrCode,
+            tipoAsistencia: myAttendance.tipoAsistencia,
+            confirmedAt: myAttendance.confirmedAt,
+          });
+          setStep('confirmacion');
+        }
+      })
       .catch(() => {})
       .finally(() => setLoadingEvento(false));
   }, [params.id]);
@@ -399,11 +422,35 @@ export default function ConfirmarPage() {
               Modalidad: {resultado.tipoAsistencia === 'PRESENCIAL' ? 'Presencial' : 'Virtual'}
             </p>
 
-            <QRDisplay code={resultado.qrCode} eventoId={params.id} />
+            {resultado.tipoAsistencia === 'VIRTUAL' && evento?.linkVirtual ? (
+              <div className="py-4">
+                <p className="text-sm text-text-muted mb-4">
+                  Acceda al evento virtual:
+                </p>
+                <a
+                  href={evento.linkVirtual}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-teal-accent text-white font-semibold rounded-lg hover:bg-teal-dark transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Entrar al evento virtual
+                </a>
+                <p className="text-xs text-text-muted mt-4">
+                  El link se abrirá en una nueva pestaña
+                </p>
+              </div>
+            ) : (
+              <>
+                <QRDisplay code={resultado.qrCode} eventoId={params.id} />
 
-            <p className="text-xs text-text-muted mt-6 max-w-sm mx-auto">
-              Guarde o tome captura de su código QR. Lo necesitará para acceder al evento.
-            </p>
+                <p className="text-xs text-text-muted mt-6 max-w-sm mx-auto">
+                  Guarde o tome captura de su código QR. Lo necesitará para acceder al evento.
+                </p>
+              </>
+            )}
 
             <div className="mt-8">
               <SecondaryButton href="/eventos">Ver más eventos</SecondaryButton>

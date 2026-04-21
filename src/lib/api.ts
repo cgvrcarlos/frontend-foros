@@ -36,6 +36,7 @@ api.interceptors.response.use(
           const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken });
           localStorage.setItem('accessToken', data.accessToken);
           localStorage.setItem('refreshToken', data.refreshToken);
+          document.cookie = `accessToken=${data.accessToken}; path=/; SameSite=Lax`;
           error.config.headers.Authorization = `Bearer ${data.accessToken}`;
           return api.request(error.config);
         } catch {

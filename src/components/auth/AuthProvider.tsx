@@ -20,11 +20,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     if (token) {
+      document.cookie = `accessToken=${token}; path=/; SameSite=Lax`;
       api.get<User>('/auth/me')
         .then(res => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
+          document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
         })
         .finally(() => setLoading(false));
     } else {
@@ -40,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     const { data: fullUser } = await api.get<User>('/auth/me');
     setUser(fullUser);
+    document.cookie = `accessToken=${data.accessToken}; path=/; SameSite=Lax`;
     return fullUser;
   };
 
@@ -48,11 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('accessToken', data.accessToken);
     const { data: fullUser } = await api.get<User>('/auth/me');
     setUser(fullUser);
+    document.cookie = `accessToken=${data.accessToken}; path=/; SameSite=Lax`;
   };
 
   const logout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
+    document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
     setUser(null);
   };
 
