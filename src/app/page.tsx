@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider';
 import api from '@/lib/api';
 import type { Evento } from '@/types/api';
 
@@ -53,13 +55,25 @@ function EventCard({ evento }: { evento: Evento }) {
 }
 
 export default function Home() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [eventos, setEventos] = useState<Evento[]>([]);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    if (user.roles.includes('ADMIN')) router.replace('/admin');
+    else if (user.roles.includes('PONENTE')) router.replace('/ponente');
+    else if (user.roles.includes('STAFF')) router.replace('/staff');
+    else router.replace('/eventos');
+  }, [user, loading, router]);
 
   useEffect(() => {
     api.get<Evento[]>('/eventos')
       .then(res => setEventos(res.data.slice(0, 3)))
       .catch(() => {});
   }, []);
+
+  if (!loading && user) return null;
 
   return (
     <div className="flex flex-col">

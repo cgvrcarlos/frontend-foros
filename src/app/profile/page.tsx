@@ -1,13 +1,14 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { QRCodeCanvas } from 'qrcode.react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { PageHero } from '@/components/ui/PageHero';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SecondaryButton } from '@/components/ui/SecondaryButton';
 import api from '@/lib/api';
-import type { User, Genero, GradoEstudios, SituacionLaboral } from '@/types/api';
+import type { User, Genero, GradoEstudios, SituacionLaboral, MyAttendance, AttendanceStatus } from '@/types/api';
 
 function formatGenero(g?: string | null) {
   const map: Record<string, string> = {
@@ -187,6 +188,81 @@ function ProfileEditForm({ user, onClose, onSave }: ProfileFormProps) {
   );
 }
 
+const STATUS_LABEL: Record<AttendanceStatus, string> = {
+  CONFIRMADO: 'Confirmado',
+  ASISTIO: 'Asistió',
+  NO_ASISTIO: 'No asistió',
+};
+
+const STATUS_COLOR: Record<AttendanceStatus, string> = {
+  CONFIRMADO: 'bg-yellow-100 text-yellow-800',
+  ASISTIO: 'bg-green-100 text-green-800',
+  NO_ASISTIO: 'bg-red-100 text-red-800',
+};
+
+function AttendanceQRCard({ attendance }: { attendance: MyAttendance }) {
+  const canvasRef = useRef<HTMLDivElement>(null);
+
+  const handleDownload = () => {
+    const canvas = canvasRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `qr-${attendance.event.id}.png`;
+    a.click();
+  };
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 p-4 rounded-xl border border-border bg-bg-light">
+      <div className="shrink-0">
+        {attendance.tipoAsistencia === 'PRESENCIAL' ? (
+          <div ref={canvasRef} className="bg-white rounded-lg p-2 border border-border inline-block">
+            <QRCodeCanvas value={attendance.qrCode} size={96} level="M" includeMargin={false} />
+          </div>
+        ) : (
+          <div className="w-24 h-24 rounded-lg border border-border bg-white flex items-center justify-center text-text-muted text-xs text-center px-2">
+            Virtual
+          </div>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-text-primary text-sm truncate">{attendance.event.titulo}</p>
+        <p className="text-xs text-text-muted mt-0.5">
+          {new Date(attendance.event.fechaHora).toLocaleDateString('es-MX', {
+            day: 'numeric', month: 'long', year: 'numeric',
+          })}
+        </p>
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${STATUS_COLOR[attendance.status]}`}>
+            {STATUS_LABEL[attendance.status]}
+          </span>
+          <span className="text-xs text-text-muted">
+            {attendance.tipoAsistencia === 'PRESENCIAL' ? 'Presencial' : 'Virtual'}
+          </span>
+        </div>
+        {attendance.tipoAsistencia === 'PRESENCIAL' && (
+          <button
+            onClick={handleDownload}
+            className="mt-2 text-xs text-teal-accent hover:underline"
+          >
+            Descargar QR
+          </button>
+        )}
+        {attendance.tipoAsistencia === 'VIRTUAL' && attendance.event.linkVirtual && (
+          <a
+            href={attendance.event.linkVirtual}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-block text-xs text-teal-accent hover:underline"
+          >
+            Acceder al evento virtual →
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function ProfileField({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-baseline gap-1 py-2 border-b border-border last:border-0">
@@ -201,6 +277,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [showEdit, setShowEdit] = useState(false);
   const [userData, setUserData] = useState<User | null>(null);
+  const [myAttendances, setMyAttendances] = useState<MyAttendance[]>([]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -212,6 +289,7 @@ export default function ProfilePage() {
   useEffect(() => {
     if (user?.id) {
       api.get<User>('/users/me').then(res => setUserData(res.data)).catch(() => {});
+      api.get<MyAttendance[]>('/attendance/my').then(res => setMyAttendances(res.data)).catch(() => {});
     }
   }, [user?.id]);
 
@@ -280,6 +358,19 @@ export default function ProfilePage() {
             <ProfileField label="Escuela" value={currentUser.escuela} />
             <ProfileField label="Situación laboral" value={formatSituacionLaboral(currentUser.situacionLaboral)} />
           </dl>
+        </SectionCard>
+
+        {/* Section 4 — Mis eventos */}
+        <SectionCard title="Mis eventos">
+          {myAttendances.length === 0 ? (
+            <p className="text-sm text-text-muted py-2">No tenés eventos confirmados aún.</p>
+          ) : (
+            <div className="space-y-3">
+              {myAttendances.map(att => (
+                <AttendanceQRCard key={att.id} attendance={att} />
+              ))}
+            </div>
+          )}
         </SectionCard>
 
         <div className="flex flex-col sm:flex-row gap-3">

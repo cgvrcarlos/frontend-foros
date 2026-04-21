@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -301,9 +301,17 @@ function Step3({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function RegisterPage() {
-  const { register: registerUser } = useAuth();
+  const { register: registerUser, user, loading } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    if (loading || !user) return;
+    if (user.roles?.includes('ADMIN')) router.replace('/admin');
+    else if (user.roles?.includes('PONENTE')) router.replace('/ponente');
+    else if (user.roles?.includes('STAFF')) router.replace('/staff');
+    else router.replace('/eventos');
+  }, [user, loading, router]);
   const [formData, setFormData] = useState<Partial<RegisterFormData>>({});
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -3,7 +3,7 @@
 export type Genero = 'MASCULINO' | 'FEMENINO' | 'OTRO' | 'NO_DICE';
 export type GradoEstudios = 'PRIMARIA' | 'SECUNDARIA' | 'PREPARATORIA' | 'LICENCIATURA' | 'POSGRADO' | 'OTRO';
 export type SituacionLaboral = 'ESTUDIANTE' | 'EMPLEADO' | 'AUTOEMPLEADO' | 'DESEMPLEADO' | 'OTRO';
-export type Role = 'ADMIN' | 'PONENTE' | 'ASISTENTE';
+export type Role = 'ADMIN' | 'PONENTE' | 'ASISTENTE' | 'STAFF';
 
 export interface User {
   id: string;
@@ -112,6 +112,23 @@ export interface Evento {
 // ─── Attendance ───────────────────────────────────────────────────────────────
 
 export type TipoAsistencia = 'PRESENCIAL' | 'VIRTUAL';
+export type AttendanceStatus = 'CONFIRMADO' | 'ASISTIO' | 'NO_ASISTIO';
+
+export interface MyAttendance {
+  id: string;
+  qrCode: string;
+  status: AttendanceStatus;
+  tipoAsistencia: TipoAsistencia;
+  confirmedAt: string;
+  verifiedAt: string | null;
+  event: {
+    id: string;
+    titulo: string;
+    fechaHora: string;
+    ubicacionPresencial?: string | null;
+    linkVirtual?: string | null;
+  };
+}
 
 export interface AnswerItem {
   questionId: string;
@@ -142,12 +159,22 @@ export interface Stats {
   totalPonentes: number;
 }
 
+export interface VerifiedTimelineBucket {
+  hour: string;
+  count: number;
+}
+
 export interface EventStats {
-  evento: { id: string; titulo: string; fechaHora: string };
+  evento: { id: string; titulo: string; fechaHora: string } | null;
   totalConfirmados: number;
   confirmadosPresenciales: number;
   confirmadosVirtuales: number;
+  asistioCount: number;
+  noAsistioCount: number;
+  confirmadoPendiente: number;
+  tasaAsistencia: number;
   totalRespuestas: number;
+  verifiedTimeline: VerifiedTimelineBucket[];
 }
 
 export interface PonenteAdmin {

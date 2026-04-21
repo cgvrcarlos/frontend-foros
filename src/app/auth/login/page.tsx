@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
@@ -11,9 +11,17 @@ import { FormField, formInputClass } from '@/components/ui/FormField';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user, loading } = useAuth();
   const router = useRouter();
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (loading || !user) return;
+    if (user.roles?.includes('ADMIN')) router.replace('/admin');
+    else if (user.roles?.includes('PONENTE')) router.replace('/ponente');
+    else if (user.roles?.includes('STAFF')) router.replace('/staff');
+    else router.replace('/eventos');
+  }, [user, loading, router]);
 
   const {
     register,
@@ -32,6 +40,8 @@ export default function LoginPage() {
         router.replace('/admin');
       } else if (user.roles?.includes('PONENTE')) {
         router.replace('/ponente');
+      } else if (user.roles?.includes('STAFF')) {
+        router.replace('/staff');
       } else {
         router.replace('/eventos');
       }
