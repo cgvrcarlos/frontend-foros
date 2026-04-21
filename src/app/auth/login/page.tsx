@@ -34,16 +34,24 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setError('');
     try {
+      console.log('🔐 Before login()...');
       const user = await login(data.email, data.password);
+      console.log('🔐 After login(), user:', JSON.stringify(user));
+      console.log('🔐 user.roles:', user.roles);
+      console.log('🔐 includes ADMIN?:', user.roles?.includes('ADMIN'));
 
-      if (user.roles?.includes('ADMIN')) {
-        router.replace('/admin');
+      const isAdmin = user.roles?.includes('ADMIN');
+      alert(`Login OK - roles: ${JSON.stringify(user.roles)} - isAdmin: ${isAdmin}`);
+
+      if (isAdmin) {
+        alert('Redirecting to /admin');
+        window.location.href = '/admin';
       } else if (user.roles?.includes('PONENTE')) {
-        router.replace('/ponente');
+        window.location.href = '/ponente';
       } else if (user.roles?.includes('STAFF')) {
-        router.replace('/staff');
+        window.location.href = '/staff';
       } else {
-        router.replace('/eventos');
+        window.location.href = '/eventos';
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };
