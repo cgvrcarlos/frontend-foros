@@ -17,10 +17,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (loading || !user) return;
-    if (user.roles?.includes('ADMIN')) router.replace('/admin');
-    else if (user.roles?.includes('PONENTE')) router.replace('/ponente');
-    else if (user.roles?.includes('STAFF')) router.replace('/staff');
-    else router.replace('/eventos');
+    if (user.roles?.includes('ADMIN')) {
+      router.replace('/admin');
+    } else if (user.roles?.includes('PONENTE')) {
+      router.replace('/ponente');
+    } else if (user.roles?.includes('STAFF')) {
+      router.replace('/staff');
+    } else {
+      router.replace('/eventos');
+    }
   }, [user, loading, router]);
 
   const {
@@ -34,24 +39,16 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormData) => {
     setError('');
     try {
-      console.log('🔐 Before login()...');
       const user = await login(data.email, data.password);
-      console.log('🔐 After login(), user:', JSON.stringify(user));
-      console.log('🔐 user.roles:', user.roles);
-      console.log('🔐 includes ADMIN?:', user.roles?.includes('ADMIN'));
 
-      const isAdmin = user.roles?.includes('ADMIN');
-      alert(`Login OK - roles: ${JSON.stringify(user.roles)} - isAdmin: ${isAdmin}`);
-
-      if (isAdmin) {
-        alert('Redirecting to /admin');
-        window.location.href = '/admin';
+      if (user.roles?.includes('ADMIN')) {
+        router.replace('/admin');
       } else if (user.roles?.includes('PONENTE')) {
-        window.location.href = '/ponente';
+        router.replace('/ponente');
       } else if (user.roles?.includes('STAFF')) {
-        window.location.href = '/staff';
+        router.replace('/staff');
       } else {
-        window.location.href = '/eventos';
+        router.replace('/eventos');
       }
     } catch (err: unknown) {
       const axiosError = err as { response?: { data?: { message?: string } } };

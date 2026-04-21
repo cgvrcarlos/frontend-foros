@@ -31,9 +31,11 @@ function redirectToRole(roles: Role[], req: NextRequest): NextResponse {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get('accessToken')?.value ?? null;
+  console.log(`[middleware] ${pathname} - token: ${token ? 'YES' : 'NO'}`);
   const payload = token ? await getPayload(token) : null;
   const roles: Role[] = payload?.roles ?? [];
   const isAuth = payload !== null;
+  console.log(`[middleware] ${pathname} - isAuth: ${isAuth}, roles: ${roles}`);
 
   // Auth pages: redirect if already logged in
   if (pathname === '/auth/login' || pathname === '/auth/register') {
